@@ -120,7 +120,7 @@ with open(args.logFile) as logFile:
 
 			specialPosStart = weaponPosEnd + 9
 			specialPosEnd   = logType[1].find("\n",specialPosStart+1)
-			specialName     = logType[1][weaponPosStart:weaponPosEnd]
+			specialName     = logType[1][specialPosStart:specialPosEnd]
 
 
 			initPlayer(killerName, stats)
@@ -155,8 +155,10 @@ with open(args.logFile) as logFile:
 					stats[victimName]['death']['with_flag'] += 1
 					stats[killerName]['kill' ]['flag_defense'] += 1
 					stats[killerName]['kill' ]['flag_attack'] += 1
+
 				elif specialName == "2": # the killer had the flag
 					stats[killerName]['kill' ]['flag_defense'] += 1
+
 				elif specialName == "1": # the victim had the flag
 					stats[killerName]['kill' ]['flag_attack'] += 1
 					stats[victimName]['death']['with_flag'] += 1
@@ -206,13 +208,20 @@ with open(args.logFile) as logFile:
 # =========================================================== COMPUTE NEW RATIO
 
 for playerName in stats.keys():
-	stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
-	stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
+	total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
+	if total_death != 0:
+		stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
+
+	if stats[playerName]['flag']['grab'] != 0:
+		stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
 
 
 # =========================================================== COMPUTE NEW RATIO
 # =============================================================================
 
+
+# =============================================================================
+# ============================================================== DUMP THE STATS
 
 with open(args.outFile, 'w') as outStatsFile:
     json.dump(stats, outStatsFile, indent=4, sort_keys=True)
