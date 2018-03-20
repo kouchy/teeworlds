@@ -379,7 +379,7 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_RIFLE:
 		{
-			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID()); // orignal code
+			//new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID()); // orignal code
 			new CLaser(GameWorld(), m_Pos, Direction, 1000, m_pPlayer->GetCID()); // custum code 1
 			GameServer()->CreateSound(m_Pos, SOUND_RIFLE_FIRE);
 		} break;
