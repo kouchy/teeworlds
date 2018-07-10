@@ -18,9 +18,11 @@ import argparse
 # ================================================================== PARAMETERS
 
 parser = argparse.ArgumentParser(prog='aff3ct-test-regression', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--log', action='store', dest='logFile',  type=str, default="tw.log",    help='Path to the new log file.'        )
-parser.add_argument('--old', action='store', dest='oldStats', type=str, default="old_stats", help='Path to the old stats file.'      )
-parser.add_argument('--out', action='store', dest='outFile',  type=str, default="new_stats", help='Path to the generated stats file.')
+parser.add_argument('--act', action='store', dest='action',   choices=["stdin", "log", "json"], default="stdin", help='Action to execute during the merge with old stats (from server log given in standard input, a server log file, or another json stats file.')
+parser.add_argument('--new', action='store', dest='newStats', type=str,                                          help='Path to the new stats/log file to add to the old stats file (merge).')
+parser.add_argument('--old', action='store', dest='oldStats', type=str,                                          help='Path to the old stats file.')
+parser.add_argument('--out', action='store', dest='outFile',  type=str,  default="stats.json",                   help='Path to the generated stats file.')
+parser.add_argument('--echo', action='store', dest='echo',    type=bool, default="false",                        help='Print the received standard input.')
 
 args = parser.parse_args()
 
@@ -45,9 +47,9 @@ def initPlayer(playerKey, stats):
 	if not playerKey in stats.keys():
 		stats[playerKey] = {}
 		stats[playerKey]['suicide'] = {'number' : 0, 'weapon' : {'world': 0, 'grenade': 0}, 'with_flag': 0}
-		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'pump': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
-		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'pump': 0}, 'player' : {}, 'with_flag': 0}
-		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'pump': 0}
+		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
+		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'with_flag': 0}
+		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
 
@@ -60,7 +62,7 @@ def getWeaponName(weapon):
 	elif weapon == "1":
 		return 'gun'
 	elif weapon == "2":
-		return 'pump'
+		return 'shotgun'
 	elif weapon == "3":
 		return 'grenade'
 	elif weapon == "4":
@@ -84,19 +86,11 @@ def getItemName(item):
 
 def parseLogLine(logline, stats):
 
-	print ("parseLogLine: " + logline)
-
-
 	logTitle = logline.split(": ",1)
 
 	if logTitle[0].find("game") != -1:
-		print ("game:")
 
 		logType = logTitle[1].split(" ",1)
-
-		print ("logType:", logType)
-		print (logType)
-
 
 		if logType[0] == "kill":
 
@@ -165,8 +159,6 @@ def parseLogLine(logline, stats):
 
 		elif logType[0] == "pickup":
 
-			print ("pickup:")
-
 			playerPosStart = logType[1].find(":") +1
 			playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
 			playerName     = logType[1][playerPosStart:playerPosEnd]
@@ -180,10 +172,6 @@ def parseLogLine(logline, stats):
 				stats[playerName]['item'][weaponName] += 1
 			else:
 				stats[playerName]['item'][itemName] += 1
-
-
-			print ("stats:")
-			print (stats)
 
 			return
 
@@ -219,8 +207,8 @@ def parseLogLine(logline, stats):
 			if timePosStart == 0:
 				return;
 
-			timePosEnd   = message.find(" seconds)", timePosStart+1)
-			time         = message[timePosStart:timePosEnd]
+			timePosEnd = message.find(" seconds)", timePosStart+1)
+			time       = message[timePosStart:timePosEnd]
 
 			initPlayer(playerName, stats)
 
@@ -235,6 +223,25 @@ def parseLogLine(logline, stats):
 			return;
 
 
+def merge_iterator(oldDict, newDict):
+	for k, v in newDict.items():
+		if isinstance(v, dict):
+			merge_iterator(oldDict[k], newDict[k])
+		else:
+			try:
+				oldDict[k] += newDict[k]
+			except KeyError:
+				oldDict[k] = newDict[k]
+
+def mergeStats(stats, newStats):
+	for playerName in newStats.keys():
+		if not playerName in stats.keys():
+			stats[playerName] = newStats[playerName]
+
+		else:
+			merge_iterator(stats[playerName], newStats[playerName])
+
+
 def computeRatios(stats):
 	for playerName in stats.keys():
 		total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
@@ -244,23 +251,17 @@ def computeRatios(stats):
 		if stats[playerName]['flag']['grab'] != 0:
 			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
 
-
 def dumpStats(stats):
 	computeRatios(stats)
 	with open(args.outFile, 'w') as outStatsFile:
 	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
 
-
 def signal_handler(sig, frame):
 	dumpStats(current_stats)
-	print ("signal_handler")
 	sys.exit(0)
-
 
 # =================================================================== FUNCTIONS
 # =============================================================================
-
-
 
 if __name__ == '__main__':
 
@@ -268,30 +269,36 @@ if __name__ == '__main__':
 
 
 	# get old stats
-	try :
+	if args.oldStats is not None:
 		with open(args.oldStats) as oldStatsFile:
-			try :
-				stats = json.load(oldStatsFile)
-			except ValueError:
-				pass
-	except FileNotFoundError:
-		pass
+			current_stats = json.load(oldStatsFile)
 
 
-	for log in map(str.rstrip, sys.stdin):
-	# for log in (line.rstrip("\r\n") for line in sys.stdin):
-		print("got : " + log)
-		print ("b current_stats:")
-		print (current_stats)
+	if args.action == "stdin":
+		# read standard input
+		for log in map(str.rstrip, sys.stdin):
+			if args.echo :
+				print(log)
 
-		parseLogLine(log, current_stats)
+			parseLogLine(log, current_stats)
 
-		print ("a current_stats:")
-		print (current_stats)
+			if (dump_time + 0.5) < time.time():
+				dumpStats(current_stats)
+				dump_time = time.time()
 
 
-		if (dump_time + 0.5) < time.time():
-			print ("timer interruption")
-			dumpStats(current_stats)
-			dump_time = time.time()
+	elif args.action == "log":
+		# read server log file
+		with open(args.logFile) as logFile:
+			for log in logFile:
+				parseLogLine(log, current_stats)
 
+
+	elif args.action == "json":
+		with open(args.newStats) as newStatsFile:
+			mergeStats(current_stats, json.load(newStatsFile))
+
+	else:
+		raise ValueError('args.action is unknown.')
+
+	dumpStats(current_stats)
