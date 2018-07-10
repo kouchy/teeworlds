@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 
+
 # =============================================================================
 # ==================================================================== PACKAGES
-
+import sys
+import signal
+import time
 import json
 import argparse
-
 # ==================================================================== PACKAGES
 # =============================================================================
+
+
+
 
 # =============================================================================
 # ================================================================== PARAMETERS
@@ -22,21 +27,15 @@ args = parser.parse_args()
 # ================================================================== PARAMETERS
 # =============================================================================
 
-stats = {}
 
 # =============================================================================
-# =============================================================== GET OLD STATS
+# =============================================================== GLOBAL VALUES
 
-with open(args.oldStats) as oldStatsFile:
-	try :
-		stats = json.load(oldStatsFile)
-	except ValueError:
-		pass
+current_stats = {}
+dump_time = time.time()
 
-
-# =============================================================== GET OLD STATS
+# =============================================================== GLOBAL VALUES
 # =============================================================================
-
 
 
 # =============================================================================
@@ -49,7 +48,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'pump': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
 		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'pump': 0}, 'player' : {}, 'with_flag': 0}
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'pump': 0}
-		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0}
+		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
 
 
@@ -71,6 +70,7 @@ def getWeaponName(weapon):
 	else: # killed by the server or team change
 		return 'server'
 
+
 def getItemName(item):
 	if item == "0":
 		return 'heart'
@@ -82,23 +82,21 @@ def getItemName(item):
 		return 'ninja'
 
 
-# =================================================================== FUNCTIONS
-# =============================================================================
+def parseLogLine(logline, stats):
+
+	print ("parseLogLine: " + logline)
 
 
+	logTitle = logline.split(": ",1)
 
-# =============================================================================
-# =============================================================== PARSE NEW LOG
+	if logTitle[0].find("game") != -1:
+		print ("game:")
 
-with open(args.logFile) as logFile:
-	for logline in logFile:
-		log = logline.split(": ",1)
+		logType = logTitle[1].split(" ",1)
 
+		print ("logType:", logType)
+		print (logType)
 
-		if log[0].find("game") == -1:
-			continue
-
-		logType = log[1].split(" ",1)
 
 		if logType[0] == "kill":
 
@@ -116,7 +114,7 @@ with open(args.logFile) as logFile:
 			weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
 
 			if weaponName == 'server': # killed by the server or team change so ignore it
-				continue
+				return
 
 			specialPosStart = weaponPosEnd + 9
 			specialPosEnd   = logType[1].find("\n",specialPosStart+1)
@@ -163,9 +161,12 @@ with open(args.logFile) as logFile:
 					stats[killerName]['kill' ]['flag_attack'] += 1
 					stats[victimName]['death']['with_flag'] += 1
 
-			continue
+			return
 
 		elif logType[0] == "pickup":
+
+			print ("pickup:")
+
 			playerPosStart = logType[1].find(":") +1
 			playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
 			playerName     = logType[1][playerPosStart:playerPosEnd]
@@ -180,11 +181,15 @@ with open(args.logFile) as logFile:
 			else:
 				stats[playerName]['item'][itemName] += 1
 
-			continue
+
+			print ("stats:")
+			print (stats)
+
+			return
 
 		elif logType[0].find("flag") == 0:
 			if len(logType) == 1: # == "flag_return\n" -> flag returned automatically
-				continue
+				return
 
 			playerPosStart = logType[1].find(":") +1
 			playerPosEnd   = logType[1].find("\'\n",playerPosStart+1)
@@ -199,29 +204,94 @@ with open(args.logFile) as logFile:
 			elif logType[0]== "flag_return":
 				stats[playerName]['flag']['return'] += 1
 
-			continue
-# =============================================================== PARSE NEW LOG
+			return
+
+	elif logTitle[0].find("chat") != -1:
+
+		message = logTitle[1]
+
+		if message.find("flag was captured") != -1:
+			playerPosStart = message.find("\'") +1
+			playerPosEnd   = message.find("\' (", playerPosStart+1)
+			playerName     = message[playerPosStart:playerPosEnd]
+
+			timePosStart = message.find("(", playerPosEnd+1) +1
+			if timePosStart == 0:
+				return;
+
+			timePosEnd   = message.find(" seconds)", timePosStart+1)
+			time         = message[timePosStart:timePosEnd]
+
+			initPlayer(playerName, stats)
+
+			time = float(time)
+
+			if stats[playerName]['flag']['min_time'] == 0.:
+				stats[playerName]['flag']['min_time'] = time
+			else:
+				m = min(stats[playerName]['flag']['min_time'], time)
+				stats[playerName]['flag']['min_time'] = m
+
+			return;
+
+
+def computeRatios(stats):
+	for playerName in stats.keys():
+		total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
+		if total_death != 0:
+			stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
+
+		if stats[playerName]['flag']['grab'] != 0:
+			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
+
+
+def dumpStats(stats):
+	computeRatios(stats)
+	with open(args.outFile, 'w') as outStatsFile:
+	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
+
+
+def signal_handler(sig, frame):
+	dumpStats(current_stats)
+	print ("signal_handler")
+	sys.exit(0)
+
+
+# =================================================================== FUNCTIONS
 # =============================================================================
 
 
-# =============================================================================
-# =========================================================== COMPUTE NEW RATIO
 
-for playerName in stats.keys():
-	total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
-	if total_death != 0:
-		stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
+if __name__ == '__main__':
 
-	if stats[playerName]['flag']['grab'] != 0:
-		stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
+	signal.signal(signal.SIGINT, signal_handler)
 
 
-# =========================================================== COMPUTE NEW RATIO
-# =============================================================================
+	# get old stats
+	try :
+		with open(args.oldStats) as oldStatsFile:
+			try :
+				stats = json.load(oldStatsFile)
+			except ValueError:
+				pass
+	except FileNotFoundError:
+		pass
 
 
-# =============================================================================
-# ============================================================== DUMP THE STATS
+	for log in map(str.rstrip, sys.stdin):
+	# for log in (line.rstrip("\r\n") for line in sys.stdin):
+		print("got : " + log)
+		print ("b current_stats:")
+		print (current_stats)
 
-with open(args.outFile, 'w') as outStatsFile:
-    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
+		parseLogLine(log, current_stats)
+
+		print ("a current_stats:")
+		print (current_stats)
+
+
+		if (dump_time + 0.5) < time.time():
+			print ("timer interruption")
+			dumpStats(current_stats)
+			dump_time = time.time()
+
