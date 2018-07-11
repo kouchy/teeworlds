@@ -79,7 +79,7 @@ function draw_dashboard(filename, update = false)
 			flag_capture.push(data[key].flag.capture);
 			flag_grab.push(data[key].flag.grab);
 			flag_return.push(data[key].flag.return);
-			time.push(Math.round((data[key].game.time/60.0)*100)/100);
+			time.push(Math.round(data[key].game.time/60.0));
 			if (data[key].game.team == "red"       ) { pseudo_online_red.push(key);       n_online++; }
 			if (data[key].game.team == "blue"      ) { pseudo_online_blue.push(key);      n_online++; }
 			if (data[key].game.team == "spectators") { pseudo_online_spectator.push(key); n_online++; }
@@ -90,11 +90,11 @@ function draw_dashboard(filename, update = false)
 		if (n_online)
 			$("#online").append(n_online + " player" + (n_online > 1 ? "s" : "") + " online : ");
 		for (var i=0;i<pseudo_online_red.length;i++)
-			$("#online").append("<span class=\"badge badge-danger\"><abbr title=\"In game (red team)\">" + pseudo_online_red[i] + "</abbr></span>&nbsp;");
+			$("#online").append("<span class=\"badge badge-danger\"><abbr title=\"In-game (red team)\">" + pseudo_online_red[i] + "</abbr></span>&nbsp;");
 		for (var i=0;i<pseudo_online_blue.length;i++)
-			$("#online").append("<span class=\"badge badge-primary\"><abbr title=\"In game (blue team)\">" + pseudo_online_blue[i] + "</abbr></span>&nbsp;");
+			$("#online").append("<span class=\"badge badge-primary\"><abbr title=\"In-game (blue team)\">" + pseudo_online_blue[i] + "</abbr></span>&nbsp;");
 		for (var i=0;i<pseudo_online.length;i++)
-			$("#online").append("<span class=\"badge badge-warning\"><abbr title=\"In game\">" + pseudo_online[i] + "</abbr></span>&nbsp;");
+			$("#online").append("<span class=\"badge badge-warning\"><abbr title=\"In-game\">" + pseudo_online[i] + "</abbr></span>&nbsp;");
 		for (var i=0;i<pseudo_online_spectator.length;i++)
 			$("#online").append("<span class=\"badge badge-secondary\"><abbr title=\"Spectator\">" + pseudo_online_spectator[i] + "</abbr></span>&nbsp;");
 
