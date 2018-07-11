@@ -90,6 +90,33 @@ def getItemName(item):
 		return 'ninja'
 
 
+def playerEnterTime(playerName):
+
+	enterTime = time.time()
+
+	try:
+		if players_in_game[playerName] == 0:
+			players_in_game[playerName] = enterTime
+		# else ignored because already in the game
+
+	except KeyError:
+		players_in_game[playerName] = enterTime
+
+
+def playerLeaveTime(playerName):
+
+	try:
+		if players_in_game[playerName] == 0:
+			return 0
+		else:
+			game_time = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
+			players_in_game[playerName] = 0
+			return game_time
+
+	except KeyError:
+		return 0
+
+
 def parseLogLine(logline, stats):
 
 	logTitle = logline.split(": ",1)
@@ -229,43 +256,34 @@ def parseLogLine(logline, stats):
 
 			return;
 
-		elif message.find("\' entered and joined the") != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the red team
+		elif message.find("joined the ") != -1: # [5b4621d5][chat]: *** 'Badmom' joined the blue team
 			playerPosStart = message.find("\'") +1
-			playerPosEnd   = message.find("\' entered", playerPosStart+1)
+			playerPosEnd   = message.find("\' ", playerPosStart+1)
 			playerName     = message[playerPosStart:playerPosEnd]
-
-			teamPosStart = message.find("joined the ", playerPosEnd +1) + 11
-			teamPosEnd   = message.find(" team", teamPosStart+1)
-			teamName     = message[teamPosStart:teamPosEnd]
-
-			enterTime = time.time()
 
 			initPlayer(playerName, stats)
 
+			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
 
-			try:
-				if players_in_game[playerName] == 0:
-					players_in_game[playerName] = enterTime
-				# else ignored because already in the game and just change of team
+			teamName = ""
 
-			except KeyError:
-				players_in_game[playerName] = enterTime
+			if message.find("spectators", playerPosEnd+1) != -1: # [5b4627ba][chat]: *** 'Badmom' joined the spectators
+				teamName = "spectators"
 
+			elif message.find("team", playerPosEnd+1) != -1: # [5b4621d5][chat]: *** 'Badmom' entered and joined the blue team
+				playerEnterTime(playerName)
 
-			stats[playerName]['game']['team'] = teamName
+				teamPosStart = message.find("joined the ", playerPosStart+1) + 11
+				teamPosEnd   = message.find(" team", teamPosStart+1)
+				teamName     = message[teamPosStart:teamPosEnd]
 
-			return
+			elif message.find("game", playerPosEnd+1) != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the game
+				playerEnterTime(playerName)
+				teamName = "online"
 
-		elif message.find("\' joined the ") != -1: # [5b4621d5][chat]: *** 'Badmom' joined the blue team
-			playerPosStart = message.find("\'") +1
-			playerPosEnd   = message.find("\' joined", playerPosStart+1)
-			playerName     = message[playerPosStart:playerPosEnd]
+			else:
+				teamName = "online"
 
-			teamPosStart = message.find("joined the ", playerPosEnd +1) + 11
-			teamPosEnd   = message.find(" team", teamPosStart+1)
-			teamName     = message[teamPosStart:teamPosEnd]
-
-			initPlayer(playerName, stats)
 
 			stats[playerName]['game']['team'] = teamName
 
@@ -278,12 +296,8 @@ def parseLogLine(logline, stats):
 
 			initPlayer(playerName, stats)
 
-			gameTime = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
-
-			stats[playerName]['game']['time'] += gameTime
+			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
 			stats[playerName]['game']['team'] = ""
-
-			players_in_game[playerName] = 0
 
 			dumpStats(current_stats) # dump the stats in the case where the last player left then the server returns nothing else
 
@@ -316,7 +330,6 @@ def mergeStats(stats, newStats):
 				stats[playerName]['flag']['min_time'] = newflagT
 			elif newflagT != 0. :
 				stats[playerName]['flag']['min_time'] = min(newflagT, oldflagT)
-
 
 def computeRatios(stats):
 	for playerName in stats.keys():
