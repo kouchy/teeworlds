@@ -43,9 +43,11 @@ function draw_dashboard(filename, update = false)
 		var flag_grab = [];
 		var flag_return = [];
 		var time = [];
+		var n_online = 0;
 		var pseudo_online = [];
-		var pseudo_online_blue = [];
 		var pseudo_online_red = [];
+		var pseudo_online_blue = [];
+		var pseudo_online_spectator = [];
 		$.each( data, function( key, val ) {
 			pseudo.push(key);
 			kill.push(data[key].kill.number);
@@ -78,25 +80,23 @@ function draw_dashboard(filename, update = false)
 			flag_grab.push(data[key].flag.grab);
 			flag_return.push(data[key].flag.return);
 			time.push(Math.round((data[key].game.time/60.0)*100)/100);
-			if (data[key].game.team == "blue")
-			{
-				pseudo_online_blue.push(key);
-				pseudo_online.push(key);
-			}
-			if (data[key].game.team == "red")
-			{
-				pseudo_online_red.push(key);
-				pseudo_online.push(key);
-			}
+			if (data[key].game.team == "red"       ) { pseudo_online_red.push(key);       n_online++; }
+			if (data[key].game.team == "blue"      ) { pseudo_online_blue.push(key);      n_online++; }
+			if (data[key].game.team == "spectators") { pseudo_online_spectator.push(key); n_online++; }
+			if (data[key].game.team == "online"    ) { pseudo_online.push(key);           n_online++; }
 		});
 
 		$("#online").empty();
-		if (pseudo_online.length)
-			$("#online").append("Online players: ");
-		for (var i=0;i<pseudo_online_blue.length;i++)
-			$("#online").append("<span class=\"badge badge-primary\">" + pseudo_online_blue[i] + "</span>&nbsp;");
+		if (n_online)
+			$("#online").append(n_online + " player" + (n_online > 1 ? "s" : "") + " online : ");
 		for (var i=0;i<pseudo_online_red.length;i++)
-			$("#online").append("<span class=\"badge badge-danger\">" + pseudo_online_red[i] + "</span>&nbsp;");
+			$("#online").append("<span class=\"badge badge-danger\"><abbr title=\"In game (red team)\">" + pseudo_online_red[i] + "</abbr></span>&nbsp;");
+		for (var i=0;i<pseudo_online_blue.length;i++)
+			$("#online").append("<span class=\"badge badge-primary\"><abbr title=\"In game (blue team)\">" + pseudo_online_blue[i] + "</abbr></span>&nbsp;");
+		for (var i=0;i<pseudo_online.length;i++)
+			$("#online").append("<span class=\"badge badge-warning\"><abbr title=\"In game\">" + pseudo_online[i] + "</abbr></span>&nbsp;");
+		for (var i=0;i<pseudo_online_spectator.length;i++)
+			$("#online").append("<span class=\"badge badge-secondary\"><abbr title=\"Spectator\">" + pseudo_online_spectator[i] + "</abbr></span>&nbsp;");
 
 		if (update == false)
 			$("#loader").hide();
