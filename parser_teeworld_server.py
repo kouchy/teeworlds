@@ -8,6 +8,7 @@ import signal
 import time
 import json
 import argparse
+import datetime
 # ==================================================================== PACKAGES
 # =============================================================================
 
@@ -18,11 +19,11 @@ import argparse
 # ================================================================== PARAMETERS
 
 parser = argparse.ArgumentParser(prog='aff3ct-test-regression', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--act', action='store', dest='action',   choices=["stdin", "log", "json"], default="stdin", help='Action to execute during the merge with old stats (from server log given in standard input, a server log file, or another json stats file.')
-parser.add_argument('--new', action='store', dest='newStats', type=str,                                          help='Path to the new stats/log file to add to the old stats file (merge).')
-parser.add_argument('--old', action='store', dest='oldStats', type=str,                                          help='Path to the old stats file.')
-parser.add_argument('--out', action='store', dest='outFile',  type=str,  default="stats.json",                   help='Path to the generated stats file.')
-parser.add_argument('--echo', action='store', dest='echo',    type=bool, default="false",                        help='Print the received standard input.')
+parser.add_argument('--act', action='store', dest='action',     choices=["stdin", "log", "json"], default="stdin", help="Action to execute during the merge with old stats (from server log given in standard input, a server log file, or another json stats file.")
+parser.add_argument('--new', action='store', dest='newStats',   type=str,                                          help="Path to the new stats/log file to add to the old stats file (merge).")
+parser.add_argument('--old', action='store', dest='oldStats',   type=str,                                          help="Path to the old stats file (if furnished, then do not create a stats file per day in 'stdin' action mode.")
+parser.add_argument('--out', action='store', dest='outPath',    type=str,  default="stats",                        help="Path to the generated stats files (full name when act == 'log' or 'json', and only header when 'stdin'.")
+parser.add_argument('--echo', action='store_true', dest='echo',                                                    help="Print the received standard input.")
 
 args = parser.parse_args()
 
@@ -35,6 +36,8 @@ args = parser.parse_args()
 
 current_stats = {}
 dump_time = time.time()
+outFile = args.outPath
+
 
 # =============================================================== GLOBAL VALUES
 # =============================================================================
@@ -253,17 +256,33 @@ def computeRatios(stats):
 
 def dumpStats(stats):
 	computeRatios(stats)
-	with open(args.outFile, 'w') as outStatsFile:
+	with open(outFile, 'w') as outStatsFile:
 	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
 
 def signal_handler(sig, frame):
 	dumpStats(current_stats)
 	sys.exit(0)
 
+def getOutFileName(header, date):
+	return header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day) + ".json"
+
+
 # =================================================================== FUNCTIONS
 # =============================================================================
 
 if __name__ == '__main__':
+
+	print('Teeworld server parser')
+	print('------------')
+	print('')
+	print('Parameters:')
+	print('action         =', args.action  )
+	print('new stats file =', args.newStats)
+	print('old stats file =', args.oldStats)
+	print('output path    =', args.outPath )
+	print('echo           =', args.echo    )
+	print('')
+
 
 	signal.signal(signal.SIGINT, signal_handler)
 
@@ -273,16 +292,33 @@ if __name__ == '__main__':
 		with open(args.oldStats) as oldStatsFile:
 			current_stats = json.load(oldStatsFile)
 
+	create_dayly_file = args.oldStats is None;
+
 
 	if args.action == "stdin":
+
+		if create_dayly_file:
+			current_date = datetime.date.today()
+			outFile = getOutFileName(args.outPath, current_date)
+			print("parser: new output filename: " + outFile)
+
+
+
 		# read standard input
 		for log in map(str.rstrip, sys.stdin):
-			if args.echo :
-				print(log)
+			if args.echo:
+				print("server: " + log)
 
 			parseLogLine(log, current_stats)
 
 			if (dump_time + 0.5) < time.time():
+				if create_dayly_file and current_date != datetime.date.today(): # the day changed
+					dumpStats(current_stats) # save correctly the old stats before changing of file name
+					current_date = datetime.date.today()
+					outFile = getOutFileName(args.outPath, current_date)
+					print("parser: new output filename: " + outFile)
+					current_stats = {}
+
 				dumpStats(current_stats)
 				dump_time = time.time()
 
