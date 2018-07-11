@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Teeworlds statistics">
+    <meta name="author" content="Adrien CASSAGNE">
+    <title>Teeworlds statistics</title>
+    <link rel="stylesheet" href="./css/lib/bootstrap-4.1.1.min.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/bootstrap_carousel.css">
+    <script src="./js/lib/jquery-3.3.1.min.js"></script>
+    <script src="./js/lib/popper-1.14.3.min.js"></script>
+    <script src="./js/lib/bootstrap-4.1.1.min.js"></script>
+    <script src="./js/lib/plotly-1.37.1.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="index.html" id="logo">Teeworlds statistics</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarCollapse" class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-chart-bar" aria-hidden="true">&nbsp;</i>Daily</a></li>
+          <li class="nav-item active"><a class="nav-link" href="history.html"><i class="fas fa-history" aria-hidden="true">&nbsp;</i>History</a></li>
+      </div>
+    </nav>
+    <div class="jumbotron">
+      <div class="container marketing">
+        <img src="images/teeworlds.jpg" class="featurette-image img-fluid d-block rounded float-right" />
+        <h1>IMS/Inria Teeworlds server</h1>
+        <p class="lead">Welcome on the official website of the IMS/Inria Teeworlds server, this page shows the statistics of the players. The server is hosted at the following address: <strong>teeworlds.potionmagic.eu:8303</strong>.</p>
+        <p>Enjoy !</p>
+      </div>
+    </div>
+    <div class="container marketing">
+      <h1>History</h1>
+      <div id="history_list" class="list-group"></div>
+      <div id="title"></div>
+    </div>
+    <div class="container-full marketing">
+      <div id="loader" style="display:none;"></div>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="kill_death_suicide"></div>
+        </div>
+        <div class="col-md-6">
+          <div id="chrono"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="kill_weapon"></div>
+        </div>
+        <div class="col-md-6">
+          <div id="death_weapon"></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6">
+          <div id="item"></div>
+        </div>
+        <div class="col-md-6">
+          <div id="flag"></div>
+        </div>
+      </div>
+      <div class="row justify-content-md-center">
+        <div class="col-md-6">
+          <div id="time"></div>
+        </div>
+      </div>
+      <div id="raw_json" class="d-flex justify-content-center"></div>
+    </div>
+    <div class="container marketing">
+      <hr>
+      <footer class="container">
+        <p class="float-right"><a href="#"><i class="fa fa-level-up-alt" aria-hidden="true">&nbsp;</i>Back to top</a></p>
+        <p>This is a footer.</p>
+      </footer>
+    </div>
+    <script src="./js/dashboard.js"></script>
+    <script src="./js/history.js"></script>
+  </body>
+</html>
