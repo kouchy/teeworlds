@@ -284,6 +284,15 @@ def mergeStats(stats, newStats):
 		else:
 			merge_iterator(stats[playerName], newStats[playerName])
 
+			# manage the min flag time
+			oldflagT =    stats[playerName]['flag']['min_time']
+			newflagT = newStats[playerName]['flag']['min_time']
+
+			if oldflagT == 0.:
+				stats[playerName]['flag']['min_time'] = newflagT
+			elif newflagT != 0. :
+				stats[playerName]['flag']['min_time'] = min(newflagT, oldflagT)
+
 
 def computeRatios(stats):
 	for playerName in stats.keys():
