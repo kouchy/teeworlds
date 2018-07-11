@@ -57,7 +57,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
-		stats[playerKey]['game'   ] = {'time': 0}
+		stats[playerKey]['game'   ] = {'time': 0, 'team': ""}
 
 
 def getWeaponName(weapon):
@@ -204,7 +204,8 @@ def parseLogLine(logline, stats):
 
 		message = logTitle[1]
 
-		if message.find("flag was captured") != -1:
+		if message.find("flag was captured") != -1: # [5b4622aa][chat]: *** The red flag was captured by 'Badmom' (9.56 seconds)
+
 			playerPosStart = message.find("\'") +1
 			playerPosEnd   = message.find("\' (", playerPosStart+1)
 			playerName     = message[playerPosStart:playerPosEnd]
@@ -228,10 +229,14 @@ def parseLogLine(logline, stats):
 
 			return;
 
-		elif message.find("entered and joined") != -1:
+		elif message.find("\' entered and joined the") != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the red team
 			playerPosStart = message.find("\'") +1
 			playerPosEnd   = message.find("\' entered", playerPosStart+1)
 			playerName     = message[playerPosStart:playerPosEnd]
+
+			teamPosStart = message.find("joined the ", playerPosEnd +1) + 11
+			teamPosEnd   = message.find(" team", teamPosStart+1)
+			teamName     = message[teamPosStart:teamPosEnd]
 
 			enterTime = time.time()
 
@@ -246,9 +251,27 @@ def parseLogLine(logline, stats):
 			except KeyError:
 				players_in_game[playerName] = enterTime
 
+
+			stats[playerName]['game']['team'] = teamName
+
 			return
 
-		elif message.find("has left the game") != -1:
+		elif message.find("\' joined the ") != -1: # [5b4621d5][chat]: *** 'Badmom' joined the blue team
+			playerPosStart = message.find("\'") +1
+			playerPosEnd   = message.find("\' joined", playerPosStart+1)
+			playerName     = message[playerPosStart:playerPosEnd]
+
+			teamPosStart = message.find("joined the ", playerPosEnd +1) + 11
+			teamPosEnd   = message.find(" team", teamPosStart+1)
+			teamName     = message[teamPosStart:teamPosEnd]
+
+			initPlayer(playerName, stats)
+
+			stats[playerName]['game']['team'] = teamName
+
+			return
+
+		elif message.find("has left the game") != -1: # [5b461feb][chat]: *** 'Badmom' has left the game
 			playerPosStart = message.find("\'") +1
 			playerPosEnd   = message.find("\' has", playerPosStart+1)
 			playerName     = message[playerPosStart:playerPosEnd]
@@ -258,6 +281,7 @@ def parseLogLine(logline, stats):
 			gameTime = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
 
 			stats[playerName]['game']['time'] += gameTime
+			stats[playerName]['game']['team'] = ""
 
 			players_in_game[playerName] = 0
 
