@@ -57,7 +57,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
-		stats[playerKey]['game'   ] = {'time': {'hours': 0, 'minutes': 0, 'seconds': 0}}
+		stats[playerKey]['game'   ] = {'time': 0}
 
 
 def getWeaponName(weapon):
@@ -255,24 +255,9 @@ def parseLogLine(logline, stats):
 
 			initPlayer(playerName, stats)
 
-			game_time = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
+			gameTime = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
 
-			game_seconds = game_time % 60
-			game_time    = (game_time - game_seconds) / 60 # [minutes]
-			game_minutes = game_time % 60
-			game_hours   = (game_time - game_minutes) / 60 # [hours]
-
-			stats[playerName]['game']['time']['seconds'] += game_seconds
-			stats[playerName]['game']['time']['minutes'] += game_minutes
-			stats[playerName]['game']['time']['hours'  ] += game_hours
-
-			if stats[playerName]['game']['time']['seconds'] >= 60:
-				stats[playerName]['game']['time']['seconds'] %= 60
-				stats[playerName]['game']['time']['minutes'] += 1
-
-			if stats[playerName]['game']['time']['minutes'] >= 60:
-				stats[playerName]['game']['time']['minutes'] %= 60
-				stats[playerName]['game']['time']['hours'  ] += 1
+			stats[playerName]['game']['time'] += gameTime
 
 			players_in_game[playerName] = 0
 
@@ -298,15 +283,6 @@ def mergeStats(stats, newStats):
 
 		else:
 			merge_iterator(stats[playerName], newStats[playerName])
-
-			# manage game time
-			if stats[playerName]['game']['time']['seconds'] >= 60:
-				stats[playerName]['game']['time']['seconds'] %= 60
-				stats[playerName]['game']['time']['minutes'] += 1
-
-			if stats[playerName]['game']['time']['minutes'] >= 60:
-				stats[playerName]['game']['time']['minutes'] %= 60
-				stats[playerName]['game']['time']['hours'  ] += 1
 
 
 def computeRatios(stats):
