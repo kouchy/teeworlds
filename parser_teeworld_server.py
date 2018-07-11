@@ -38,6 +38,8 @@ current_stats = {}
 dump_time = time.time()
 outFile = args.outPath
 
+players_in_game = {}
+
 
 # =============================================================== GLOBAL VALUES
 # =============================================================================
@@ -55,6 +57,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
+		stats[playerKey]['game'   ] = {'time': {'hours': 0, 'minutes': 0, 'seconds': 0}}
 
 
 def getWeaponName(weapon):
@@ -211,19 +214,71 @@ def parseLogLine(logline, stats):
 				return;
 
 			timePosEnd = message.find(" seconds)", timePosStart+1)
-			time       = message[timePosStart:timePosEnd]
+			flagTime   = message[timePosStart:timePosEnd]
 
 			initPlayer(playerName, stats)
 
-			time = float(time)
+			flagTime = float(flagTime)
 
 			if stats[playerName]['flag']['min_time'] == 0.:
-				stats[playerName]['flag']['min_time'] = time
+				stats[playerName]['flag']['min_time'] = flagTime
 			else:
-				m = min(stats[playerName]['flag']['min_time'], time)
+				m = min(stats[playerName]['flag']['min_time'], flagTime)
 				stats[playerName]['flag']['min_time'] = m
 
 			return;
+
+		elif message.find("entered and joined") != -1:
+			playerPosStart = message.find("\'") +1
+			playerPosEnd   = message.find("\' entered", playerPosStart+1)
+			playerName     = message[playerPosStart:playerPosEnd]
+
+			enterTime = time.time()
+
+			initPlayer(playerName, stats)
+
+
+			try:
+				if players_in_game[playerName] == 0:
+					players_in_game[playerName] = enterTime
+				# else ignored because already in the game and just change of team
+
+			except KeyError:
+				players_in_game[playerName] = enterTime
+
+			return
+
+		elif message.find("has left the game") != -1:
+			playerPosStart = message.find("\'") +1
+			playerPosEnd   = message.find("\' has", playerPosStart+1)
+			playerName     = message[playerPosStart:playerPosEnd]
+
+			initPlayer(playerName, stats)
+
+			game_time = int(time.time() - players_in_game[playerName]); # difference is a float converted to an integer [seconds]
+
+			game_seconds = game_time % 60
+			game_time    = (game_time - game_seconds) / 60 # [minutes]
+			game_minutes = game_time % 60
+			game_hours   = (game_time - game_minutes) / 60 # [hours]
+
+			stats[playerName]['game']['time']['seconds'] += game_seconds
+			stats[playerName]['game']['time']['minutes'] += game_minutes
+			stats[playerName]['game']['time']['hours'  ] += game_hours
+
+			if stats[playerName]['game']['time']['seconds'] >= 60:
+				stats[playerName]['game']['time']['seconds'] %= 60
+				stats[playerName]['game']['time']['minutes'] += 1
+
+			if stats[playerName]['game']['time']['minutes'] >= 60:
+				stats[playerName]['game']['time']['minutes'] %= 60
+				stats[playerName]['game']['time']['hours'  ] += 1
+
+			players_in_game[playerName] = 0
+
+			dumpStats(current_stats) # dump the stats in the case where the last player left then the server returns nothing else
+
+			return
 
 
 def merge_iterator(oldDict, newDict):
@@ -243,6 +298,15 @@ def mergeStats(stats, newStats):
 
 		else:
 			merge_iterator(stats[playerName], newStats[playerName])
+
+			# manage game time
+			if stats[playerName]['game']['time']['seconds'] >= 60:
+				stats[playerName]['game']['time']['seconds'] %= 60
+				stats[playerName]['game']['time']['minutes'] += 1
+
+			if stats[playerName]['game']['time']['minutes'] >= 60:
+				stats[playerName]['game']['time']['minutes'] %= 60
+				stats[playerName]['game']['time']['hours'  ] += 1
 
 
 def computeRatios(stats):
