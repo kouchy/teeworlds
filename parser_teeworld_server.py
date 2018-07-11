@@ -364,8 +364,15 @@ if __name__ == '__main__':
 		if create_dayly_file:
 			current_date = datetime.date.today()
 			outFile = getOutFileName(args.outPath, current_date)
-			print("parser: new output filename: " + outFile)
 
+			try :
+				with open(outFile) as oldStatsFile:
+					current_stats = json.load(oldStatsFile)
+
+				print("parser: load today stats: " + outFile)
+
+			except IOError:
+				print("parser: new output filename: " + outFile)
 
 
 		# read standard input
