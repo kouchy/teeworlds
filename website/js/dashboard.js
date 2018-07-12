@@ -143,9 +143,9 @@ function draw_dashboard(filename, update = false)
 		var layout_item = {barmode: 'group', title: 'Items count'};
 		Plotly.newPlot('item', data_item, layout_item);
 
-		var flag_capture = { x: pseudo, y: flag_capture,  name: 'Capture', type: 'bar' };
-		var flag_grab    = { x: pseudo, y: flag_grab,     name: 'Grab',    type: 'bar' };
-		var flag_return  = { x: pseudo, y: flag_return,   name: 'Return',  type: 'bar' };
+		var flag_capture = { x: pseudo, y: flag_capture,  name: 'Capture',    type: 'bar' };
+		var flag_grab    = { x: pseudo, y: flag_grab,     name: 'Grab',       type: 'bar' };
+		var flag_return  = { x: pseudo, y: flag_return,   name: 'Bring back', type: 'bar' };
 		var data_flag    = [flag_capture, flag_grab, flag_return];
 		var layout_flag  = {barmode: 'group', title: 'Flag actions'};
 		Plotly.newPlot('flag', data_flag, layout_flag);

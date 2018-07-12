@@ -24,8 +24,8 @@
       </button>
       <div id="navbarCollapse" class="collapse navbar-collapse">
         <ul class="navbar-nav mr-auto">
-          <li class="nav-item active"><a class="nav-link" href="index.html"><i class="fas fa-chart-bar" aria-hidden="true">&nbsp;</i>Daily</a></li>
-          <li class="nav-item"><a class="nav-link" href="total.html"><i class="fas fa-chart-area" aria-hidden="true">&nbsp;</i>Total</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html"><i class="fas fa-chart-bar" aria-hidden="true">&nbsp;</i>Daily</a></li>
+          <li class="nav-item active"><a class="nav-link" href="total.html"><i class="fas fa-chart-area" aria-hidden="true">&nbsp;</i>Total</a></li>
           <li class="nav-item"><a class="nav-link" href="history.html"><i class="fas fa-history" aria-hidden="true">&nbsp;</i>History</a></li>
       </div>
     </nav>
@@ -34,15 +34,15 @@
         <img src="images/teeworlds.jpg" class="featurette-image img-fluid d-block rounded float-right" />
         <h1>IMS/Inria Teeworlds server</h1>
         <p class="lead">Welcome on the official website of the IMS/Inria Teeworlds server, this page shows the statistics of the players. The server is hosted at the following address: <strong>teeworlds.potionmagic.eu:8303</strong>.</p>
-        <p>Enjoy!</p>
+        <p>Enjoy !</p>
         <div id="online"></div>
       </div>
     </div>
     <div class="container marketing">
-      <h1>Daily (in live)</h1>
+      <h1>Total</h1>
     </div>
     <div class="container-full marketing">
-      <div id="loader"></div>
+      <div id="loader" style="display:none;"></div>
       <div class="row">
         <div class="col-md-6">
           <div id="kill_death_suicide"></div>
@@ -75,7 +75,6 @@
       <div id="raw_json" class="d-flex justify-content-center"></div>
     </div>
     <div class="container marketing">
-      <div id="error" class="alert alert-danger" style="display:none;">An error happened :-(</div>
       <hr>
       <footer class="container">
         <p class="float-right"><a href="#"><i class="fa fa-level-up-alt" aria-hidden="true">&nbsp;</i>Back to top</a></p>
@@ -83,6 +82,6 @@
       </footer>
     </div>
     <script src="./js/dashboard.js"></script>
-    <script src="./js/daily.js"></script>
+    <script src="./js/total.js"></script>
   </body>
 </html>

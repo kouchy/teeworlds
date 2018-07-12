@@ -1,6 +1,6 @@
 //main
 $(document).ready(function() {
-	var dir = root_dir;
+	var dir = root_dir + "/daily";
 	var fileextension = ".json";
 	$.ajax({
 		//This will retrieve the contents of the folder if the folder is configured as 'browsable'
@@ -18,7 +18,7 @@ $(document).ready(function() {
 					$("#"+id).addClass("active");
 					$("#title").empty();
 					$("#title").append("<br/><h1>" + date + "</h1>");
-					draw_dashboard(root_dir + "/" + filename);
+					draw_dashboard(root_dir + "/daily/" + filename);
 				});
 			});
 	    }
