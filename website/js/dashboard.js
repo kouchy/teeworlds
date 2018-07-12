@@ -103,6 +103,11 @@ function draw_dashboard(filename, update = false)
 		let chronos = to_object(all_players, all_stats_by_type.flag.min_time, time => time > 0);
 		// We don't need it anymore
 		delete all_stats_by_type.flag.min_time;
+		// Sort chronos in ascending order
+		let keys_sorted_chronos = Object.keys(chronos).sort(function(a,b){return chronos[a]-chronos[b]});
+		let vals_sorted_chronos = [];
+		for (let i = 0; i < keys_sorted_chronos.length; i++)
+			vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
 
 		let player_statuses = { "red": [], "blue": [], "online": [], "spectators": [], "offline": [] };
 		all_players.forEach(pseudo => player_statuses[data[pseudo].game.team || "offline"].push(pseudo));
@@ -152,7 +157,7 @@ function draw_dashboard(filename, update = false)
 			},
 			{
 				elem: 'chrono', title: 'Chrono (shortest flag time in seconds)', stats: [0],
-				create_stat: () => ({ x: Object.keys(chronos), y: Object.values(chronos), name: 'Flag time (sec)', type: 'bar' }),
+				create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 			},
 			{
 				elem: 'item', title: 'Items count', stats: items,
