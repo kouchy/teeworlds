@@ -40,7 +40,6 @@ outFile = args.outPath
 
 players_in_game = {}
 
-
 # =============================================================== GLOBAL VALUES
 # =============================================================================
 
@@ -115,6 +114,16 @@ def playerLeaveTime(playerName):
 
 	except KeyError:
 		return 0
+
+
+def countNumPlayersInGame():
+
+	count = 0
+	for playerName in players_in_game.keys():
+		if players_in_game[playerName] != 0:
+			count += 1
+
+	return count
 
 
 def parseLogLine(logline, stats):
@@ -314,22 +323,28 @@ def merge_iterator(oldDict, newDict):
 			except KeyError:
 				oldDict[k] = newDict[k]
 
+
 def mergeStats(stats, newStats):
 	for playerName in newStats.keys():
 		if not playerName in stats.keys():
 			stats[playerName] = newStats[playerName]
 
 		else:
-			merge_iterator(stats[playerName], newStats[playerName])
-
 			# manage the min flag time
 			oldflagT =    stats[playerName]['flag']['min_time']
 			newflagT = newStats[playerName]['flag']['min_time']
+			saveFlagT = 0
 
-			if oldflagT == 0.:
-				stats[playerName]['flag']['min_time'] = newflagT
-			elif newflagT != 0. :
-				stats[playerName]['flag']['min_time'] = min(newflagT, oldflagT)
+			if oldflagT == 0:
+				saveFlagT = newflagT
+			elif newflagT != 0 :
+				saveFlagT = min(newflagT, oldflagT)
+
+			merge_iterator(stats[playerName], newStats[playerName])
+
+
+			stats[playerName]['flag']['min_time'] = saveFlagT
+
 
 def computeRatios(stats):
 	for playerName in stats.keys():
@@ -340,14 +355,17 @@ def computeRatios(stats):
 		if stats[playerName]['flag']['grab'] != 0:
 			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
 
+
 def dumpStats(stats):
 	computeRatios(stats)
 	with open(outFile, 'w') as outStatsFile:
 	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
 
+
 def signal_handler(sig, frame):
 	dumpStats(current_stats)
 	sys.exit(0)
+
 
 def getOutFileName(header, date):
 	return header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day) + ".json"
