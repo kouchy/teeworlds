@@ -1,5 +1,5 @@
 //main
-$(document).ready(function() {
+$(function() {
 	var dir = root_dir + "/daily";
 	var fileextension = ".json";
 	$.ajax({
@@ -11,7 +11,7 @@ $(document).ready(function() {
 				var filename = this.href.replace(window.location.host, "").replace("http:///", "");
 				var id = filename.replace(/\.[^/.]+$/, "");
 				var date = id.replace(/stats_/g, "");
-				date = date.charAt(0) + date.charAt(1) + date.charAt(2) + date.charAt(3) + "-" + date.charAt(4) + date.charAt(5) + "-" + date.charAt(6) + + date.charAt(7);
+				date = date.slice(0, 4) + "-" + date.slice(4, 6) + "-" + date.slice(6, 8);
 				$("#history_list").append($("<a href=\"#\" class=\"list-group-item list-group-item-action\" id=\""+ id +"\">" + date + "</a>"));
 
 				$("#"+id).click(function() {
