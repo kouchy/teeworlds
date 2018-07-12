@@ -130,7 +130,7 @@ def parseLogLine(logline, stats):
 
 	logTitle = logline.split(": ",1)
 
-	if logTitle[0].find("game") != -1:
+	if logTitle[0].find("game") != -1 and countNumPlayersInGame() > 1:
 
 		logType = logTitle[1].split(" ",1)
 
