@@ -1,3 +1,41 @@
+function notify_new_player(player, status) {
+
+  var title = "Teeworlds Inria/IMS";
+  var options = {
+      body: player + " joined the " + status + " team!",
+      icon: "images/tee_small.png"
+  }
+
+  // Let's check if the browser supports notifications
+  if (!("Notification" in window)) {
+    console.log("This browser does not support desktop notification");
+  }
+
+  // Let's check whether notification permissions have already been granted
+  else if (Notification.permission === "granted") {
+    // If it's okay let's create a notification
+    var notification = new Notification(title, options);
+  }
+
+  // Otherwise, we need to ask the user for permission
+  else if (Notification.permission !== 'denied' || Notification.permission === "default") {
+    Notification.requestPermission(function (permission) {
+      // If the user accepts, let's create a notification
+      if (permission === "granted") {
+        var notification = new Notification(title, options);
+      }
+    });
+  }
+
+  // At last, if the user has denied notifications, and you
+  // want to be respectful there is no need to bother them any more.
+}
+
+var pseudo_online_prev = [];
+var pseudo_online_red_prev = [];
+var pseudo_online_blue_prev = [];
+var pseudo_online_spectator_prev = [];
+
 function draw_dashboard(filename, update = false)
 {
 	if (update == false)
@@ -90,13 +128,35 @@ function draw_dashboard(filename, update = false)
 		if (n_online)
 			$("#online").append(n_online + " player" + (n_online > 1 ? "s" : "") + " online : ");
 		for (var i=0;i<pseudo_online_red.length;i++)
+		{
 			$("#online").append("<span class=\"badge badge-danger\"><abbr title=\"In-game (red team)\">" + pseudo_online_red[i] + "</abbr></span>&nbsp;");
+			if (update && (pseudo_online_red_prev.indexOf(pseudo_online_red[i]) == -1))
+				notify_new_player(pseudo_online_red[i], "red");
+		}
+
 		for (var i=0;i<pseudo_online_blue.length;i++)
+		{
 			$("#online").append("<span class=\"badge badge-primary\"><abbr title=\"In-game (blue team)\">" + pseudo_online_blue[i] + "</abbr></span>&nbsp;");
+			if (update && (pseudo_online_blue_prev.indexOf(pseudo_online_blue[i]) == -1))
+				notify_new_player(pseudo_online_blue[i], "blue");
+		}
 		for (var i=0;i<pseudo_online.length;i++)
+		{
 			$("#online").append("<span class=\"badge badge-warning\"><abbr title=\"In-game\">" + pseudo_online[i] + "</abbr></span>&nbsp;");
+			if (update && (pseudo_online_prev.indexOf(pseudo_online[i]) == -1))
+				notify_new_player(pseudo_online[i], "general");
+		}
 		for (var i=0;i<pseudo_online_spectator.length;i++)
+		{
 			$("#online").append("<span class=\"badge badge-secondary\"><abbr title=\"Spectator\">" + pseudo_online_spectator[i] + "</abbr></span>&nbsp;");
+			if (update && (pseudo_online_spectator_prev.indexOf(pseudo_online_spectator[i]) == -1))
+				notify_new_player(pseudo_online_spectator[i], "spectator");
+		}
+
+		pseudo_online_red_prev = pseudo_online_red;
+		pseudo_online_blue_prev = pseudo_online_blue;
+		pseudo_online_prev = pseudo_online;
+		pseudo_online_spectator_prev = pseudo_online_spectator;
 
 		if (update == false)
 			$("#loader").hide();
@@ -157,6 +217,8 @@ function draw_dashboard(filename, update = false)
 
 		if (update == false)
 			$("#raw_json").append("<a href=\"" + filename + "\" class=\"btn btn-primary\" role=\"button\" target=\"_blank\">Raw JSON data file</a>");
+
+		$("#error").hide();
 	});
 }
 
