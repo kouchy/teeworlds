@@ -9,32 +9,31 @@ var flag_stats_names = { 'return': 'Bring back' }
 var online_players = [];
 
 function notify_new_player(player, status, left=false) {
+	var title = "Teeworlds Inria/IMS";
+	var options = {
+		body: `${player} ${ left ? "left the game!" : "joined the " + status + " team!" }`,
+		icon: "images/tee_small.png"
+	}
 
-  var title = "Teeworlds Inria/IMS";
-  var options = {
-    body: `${player} ${ left ? "left" : "joined" } the ${status} team!`,
-    icon: "images/tee_small.png"
-  }
+	// Let's check if the browser supports notifications
+	if (!("Notification" in window)) {
+		console.log("This browser does not support desktop notification");
+	} else if (Notification.permission === "granted") {
+		// Let's check whether notification permissions have already been granted
+		// If it's okay let's create a notification
+		new Notification(title, options);
+	} else if (Notification.permission !== 'denied' || Notification.permission === "default") {
+		// Otherwise, we need to ask the user for permission
+		Notification.requestPermission(function (permission) {
+			// If the user accepts, let's create a notification
+			if (permission === "granted") {
+				new Notification(title, options);
+			}
+		});
+	}
 
-  // Let's check if the browser supports notifications
-  if (!("Notification" in window)) {
-    console.log("This browser does not support desktop notification");
-  } else if (Notification.permission === "granted") {
-    // Let's check whether notification permissions have already been granted
-    // If it's okay let's create a notification
-    new Notification(title, options);
-  } else if (Notification.permission !== 'denied' || Notification.permission === "default") {
-    // Otherwise, we need to ask the user for permission
-    Notification.requestPermission(function (permission) {
-      // If the user accepts, let's create a notification
-      if (permission === "granted") {
-        new Notification(title, options);
-      }
-    });
-  }
-
-  // At last, if the user has denied notifications, and you
-  // want to be respectful there is no need to bother them any more.
+	// At last, if the user has denied notifications, and you
+	// want to be respectful there is no need to bother them any more.
 }
 
 let capitalize = string => string.charAt(0).toUpperCase() + string.slice(1);
@@ -118,10 +117,10 @@ function draw_dashboard(filename, update = false)
 		let current_online_players = diff(all_players, player_statuses["offline"]);
 		// Only try to notify if it's not the first rendering
 		if (update) {
-		  // newly online players
-		  diff(current_online_players, online_players).forEach(p => notify_new_player(p, data[p].game.team));
-		  // newly offline players
-		  diff(online_players, current_online_players).forEach(p => notify_new_player(p, data[p].game.team, true));
+			// newly online players
+			diff(current_online_players, online_players).forEach(p => notify_new_player(p, data[p].game.team));
+			// newly offline players
+			diff(online_players, current_online_players).forEach(p => notify_new_player(p, data[p].game.team, true));
 		}
 		online_players = current_online_players;
 
