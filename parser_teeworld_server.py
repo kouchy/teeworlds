@@ -153,8 +153,7 @@ def parseLogLine(logline, stats):
 				return
 
 			specialPosStart = weaponPosEnd + 9
-			specialPosEnd   = logType[1].find("\n",specialPosStart+1)
-			specialName     = logType[1][specialPosStart:specialPosEnd]
+			specialName     = logType[1][specialPosStart]
 
 
 			initPlayer(killerName, stats)
@@ -183,7 +182,6 @@ def parseLogLine(logline, stats):
 					stats[victimName]['death']['player'][killerName] += 1
 				except KeyError:
 					stats[victimName]['death']['player'][killerName] = 1
-
 
 				if specialName == "3": # the killer and the victim had the flag
 					stats[victimName]['death']['with_flag'] += 1
