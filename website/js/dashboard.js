@@ -1,23 +1,55 @@
 var weapons = ["hammer", "gun", "shotgun", "grenade", "laser", "ninja"];
 var items = ['heart', 'armor', 'shotgun', 'grenade', 'laser', 'ninja'];
 var player_stats = ['kill', 'death', 'suicide'];
-var flag_stats = ['capture', 'grab', 'return', 'min_time'];
+var flag_stats = ['capture', 'grab', 'return'];
 // only 'armor' is not simply capitalized
 var items_names = { 'armor': 'Shield' }
+// 'return' is aliased to 'Bring back'
+var flag_stats_names = { 'return': 'Bring back' }
+var online_players = [];
 
-function capitalize(string) {
-	return string.charAt(0).toUpperCase() + string.slice(1);
+function notify_new_player(player, status, left=false) {
+
+  var title = "Teeworlds Inria/IMS";
+  var options = {
+    body: `${player} ${ left ? "left" : "joined" } the ${status} team!`,
+    icon: "images/tee_small.png"
+  }
+
+  // Let's check if the browser supports notifications
+  if (!("Notification" in window)) {
+    console.log("This browser does not support desktop notification");
+  } else if (Notification.permission === "granted") {
+    // Let's check whether notification permissions have already been granted
+    // If it's okay let's create a notification
+    new Notification(title, options);
+  } else if (Notification.permission !== 'denied' || Notification.permission === "default") {
+    // Otherwise, we need to ask the user for permission
+    Notification.requestPermission(function (permission) {
+      // If the user accepts, let's create a notification
+      if (permission === "granted") {
+        new Notification(title, options);
+      }
+    });
+  }
+
+  // At last, if the user has denied notifications, and you
+  // want to be respectful there is no need to bother them any more.
 }
+
+let capitalize = string => string.charAt(0).toUpperCase() + string.slice(1);
+
+let diff = (a, b) => a.filter(i => b.indexOf(i) < 0);
 
 // Create a new empty stat object to hold the stats
 function get_new_empty_stats() {
 	let schema = {
-		kill: { number: [], weapon: {}, },
-		death: { number: [], weapon: {}, },
-		suicide: { number: [], },
+		kill: { number: [], weapon: {} },
+		death: { number: [], weapon: {} },
+		suicide: { number: [] },
 		item: {},
-		flag: {},
-		game: { time: [], },
+		flag: { min_time: [] },
+		game: { time: [] },
 	};
 	// Fill up with info about stats
 	weapons.forEach(w => {
@@ -47,10 +79,10 @@ function reduce_stat(data, element, stat_paths = []) {
 function to_object(keys, values, filter_func = () => true) {
   let object = {};
   for (let i = 0; i < keys.length; i++)
-		if (filter_func(values[i]))
-    	object[keys[i]] = values[i];
+    if (filter_func(values[i]))
+      object[keys[i]] = values[i];
   return object;
-};
+}
 
 function draw_dashboard(filename, update = false)
 {
@@ -70,6 +102,8 @@ function draw_dashboard(filename, update = false)
 		all_stats_by_type.game.time = all_stats_by_type.game.time.map(t => Math.round(t/60.0));
 		// Get and filter out non positive flag time
 		let chronos = to_object(all_players, all_stats_by_type.flag.min_time, time => time > 0);
+		// We don't need it anymore
+		delete all_stats_by_type.flag.min_time;
 
 		let player_statuses = { "red": [], "blue": [], "online": [], "spectators": [], "offline": [] };
 		all_players.forEach(pseudo => player_statuses[data[pseudo].game.team || "offline"].push(pseudo));
@@ -81,6 +115,15 @@ function draw_dashboard(filename, update = false)
 			spectators: { class: "secondary", title: "Spectator" },
 		};
 		Object.keys(online_statuses).forEach(status => n_online += player_statuses[status].length);
+		let current_online_players = diff(all_players, player_statuses["offline"]);
+		// Only try to notify if it's not the first rendering
+		if (update) {
+		  // newly online players
+		  diff(current_online_players, online_players).forEach(p => notify_new_player(p, data[p].game.team));
+		  // newly offline players
+		  diff(online_players, current_online_players).forEach(p => notify_new_player(p, data[p].game.team, true));
+		}
+		online_players = current_online_players;
 
 		$("#online").empty();
 		if (n_online) {
@@ -118,7 +161,7 @@ function draw_dashboard(filename, update = false)
 			},
 			{
 				elem: 'flag', title: 'Flag actions', stats: flag_stats,
-				create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: capitalize(action), type: 'bar' }),
+				create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 			},
 			{
 				elem: 'time', title: 'Time spent (in minutes)', stats: [0],
@@ -130,6 +173,8 @@ function draw_dashboard(filename, update = false)
 
 		if (!update)
 			$("#raw_json").append(`<a href="${filename}" class="btn btn-primary" role="button" target="_blank">Raw JSON data file</a>`);
+
+		$("#error").hide();
 	});
 }
 
