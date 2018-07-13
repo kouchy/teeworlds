@@ -1,7 +1,9 @@
 var selected_date;
 var available_dates = [];
 var disabled_dates = [];
+var rendered = false;
 var first_time = true;
+var stats_type = "daily";
 
 function findGetParameter(parameterName) {
 	let result = null,
@@ -21,8 +23,6 @@ function render(path)
 	let date = path.replace(/.*stats_([0-9]*)\.json/g, "$1");
 	date = date.slice(6, 8) + "/" + date.slice(4, 6) + "/" + date.slice(0, 4);
 	let type = path.replace(/.*\/(.*)\/stats_[0-9]*\.json/g, "$1");
-
-	$("#datepicker").val(date);
 
 	$.ajax({
 		url: path,
@@ -45,6 +45,7 @@ function render(path)
 			$("#title").empty();
 			$("#title").append("<br/><h1> History from the " + date + " (" + type + ")</h1>");
 			draw_dashboard(path);
+			rendered = true;
 		}
 	});
 }
@@ -56,10 +57,36 @@ $(document).ready(function() {
 	let day = currentTime.getDate();
 	let year = currentTime.getFullYear();
 	let filename = "stats_" + year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day;
-	draw_online_players(root_dir + "/daily/" + filename, true);
-	setInterval(function() { draw_online_players(root_dir + "/daily/" + filename, false); }, 5000);
+	draw_online_players(root_dir + "/" + stats_type + "/" + filename, true);
+	setInterval(function() { draw_online_players(root_dir + "/" + stats_type + "/" + filename, false); }, 5000);
 
-	let dir = root_dir + "/daily";
+	let path = findGetParameter("file");
+	if (path != undefined)
+	{
+		let type = path.replace(/.*\/(.*)\/stats_[0-9]*\.json/g, "$1");
+		stats_type = type;
+		$("#option_"+type).button('toggle');
+	}
+
+	$("#option_daily").on('click', function(){
+		if (stats_type != "daily")
+		{
+			stats_type = "daily";
+			if (path != undefined && rendered == true)
+				render(path.replace(/total/g, stats_type));
+		}
+	});
+
+	$("#option_total").on('click', function(){
+		if (stats_type != "total")
+		{
+			stats_type = "total";
+			if (path != undefined && rendered == true)
+				render(path.replace(/daily/g, stats_type));
+		}
+	});
+
+	let dir = root_dir + "/" + stats_type;
 	let fileextension = ".json";
 	$.ajax({
 		//This will retrieve the contents of the folder if the folder is configured as 'browsable'
@@ -90,7 +117,6 @@ $(document).ready(function() {
 			first_time = false;
 			let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
 
-			let path = findGetParameter("file")
 			let get_date = "";
 			if (path != undefined)
 			{
@@ -127,7 +153,7 @@ $(document).ready(function() {
 					selected_date = new_date;
 					let filename = "stats_" + year+month+day + ".json";
 
-					render(root_dir + "/daily/" + filename);
+					render(root_dir + "/" + stats_type + "/" + filename);
 				}
 			});
 		}
