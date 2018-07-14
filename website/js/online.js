@@ -1,8 +1,8 @@
 var online_players = [];
 
 function notify_new_player(player, status, left=false) {
-	var title = "Teeworlds Inria/IMS";
-	var options = {
+	let title = "Teeworlds Inria/IMS";
+	let options = {
 		body: `${player} ${ left ? "left the game!" : "joined the " + status + " team!" }`,
 		icon: "images/tee_small.png"
 	}

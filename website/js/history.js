@@ -1,4 +1,4 @@
-var selected_date;
+var selected_date = "";
 var available_dates = [];
 var disabled_dates = [];
 var rendered = false;
@@ -20,9 +20,8 @@ function findGetParameter(parameterName) {
 
 function render(path)
 {
-	let date = path.replace(/.*stats_([0-9]*)\.json/g, "$1");
-	date = date.slice(6, 8) + "/" + date.slice(4, 6) + "/" + date.slice(0, 4);
-	let type = path.replace(/.*\/(.*)\/stats_[0-9]*\.json/g, "$1");
+	let date = get_date_from_path(path);
+	let type = get_type_from_path(path);
 
 	$.ajax({
 		url: path,
@@ -63,12 +62,13 @@ $(document).ready(function() {
 	let path = findGetParameter("file");
 	if (path != undefined)
 	{
-		let type = path.replace(/.*\/(.*)\/stats_[0-9]*\.json/g, "$1");
+		let type = get_type_from_path(path);
 		stats_type = type;
 		$("#option_"+type).button('toggle');
 	}
 
 	$("#option_daily").on('click', function(){
+		path = findGetParameter("file");
 		if (stats_type != "daily")
 		{
 			stats_type = "daily";
@@ -78,6 +78,7 @@ $(document).ready(function() {
 	});
 
 	$("#option_total").on('click', function(){
+		path = findGetParameter("file");
 		if (stats_type != "total")
 		{
 			stats_type = "total";
@@ -117,17 +118,12 @@ $(document).ready(function() {
 			first_time = false;
 			let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
 
-			let get_date = "";
 			if (path != undefined)
-			{
-				get_date = path.replace(/.*stats_([0-9]*)\.json/g, "$1");
-				get_date = get_date.slice(6, 8) + "/" + get_date.slice(4, 6) + "/" + get_date.slice(0, 4);
-				selected_date = get_date;
-			}
+				selected_date = get_date_from_path(path);
 
 			$('#datepicker').datepicker({
 				format: 'dd/mm/yyyy',
-				value: get_date,
+				value: selected_date,
 				uiLibrary: 'bootstrap4',
 				minDate: '10/07/2018',
 				maxDate: today,
@@ -146,13 +142,11 @@ $(document).ready(function() {
 				new_date = $("#datepicker").val();
 				if (new_date != selected_date)
 				{
-					let split = new_date.split("/");
-					let year = split[2];
-					let month = split[1];
-					let day = split[0];
+					let year = get_year_from_date(new_date);
+					let month = get_month_from_date(new_date);
+					let day = get_day_from_date(new_date);
 					selected_date = new_date;
 					let filename = "stats_" + year+month+day + ".json";
-
 					render(root_dir + "/" + stats_type + "/" + filename);
 				}
 			});
