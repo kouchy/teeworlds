@@ -93,31 +93,31 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 {
 	plots = [
 		{
-			elem: 'kill_death_suicide', title: 'Kills, deaths and suicides', stats: player_stats,
+			elem: 'plot1', title: 'Kills, deaths and suicides', stats: player_stats,
 			create_stat: stat => ({ x: all_players, y: all_stats_by_type[stat].number, name: capitalize(stat), type: 'bar' }),
 		},
 		{
-			elem: 'kill_weapon', title: 'Kills by weapons', stats: weapons,
-			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
-		},
-		{
-			elem: 'death_weapon', title: 'Deaths by weapons', stats: weapons,
-			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
-		},
-		{
-			elem: 'chrono', title: 'Chrono (shortest flag time in seconds)', stats: [0],
+			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0],
 			create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 		},
 		{
-			elem: 'item', title: 'Collected items', stats: items,
+			elem: 'plot3', title: 'Kills by weapons', stats: weapons,
+			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
+		},
+		{
+			elem: 'plot4', title: 'Deaths by weapons', stats: weapons,
+			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
+		},
+		{
+			elem: 'plot5', title: 'Collected items', stats: items,
 			create_stat: item => ({ x: all_players, y: all_stats_by_type.item[item], name: items_names[item] || capitalize(item), type: 'bar' }),
 		},
 		{
-			elem: 'flag', title: 'Flag actions', stats: flag_stats,
+			elem: 'plot6', title: 'Flag actions', stats: flag_stats,
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'time', title: 'Time spent (in minutes)', stats: [0],
+			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0],
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
 		},
 	];
@@ -156,31 +156,31 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 
 	plots = [
 		{
-			elem: 'kill_death_suicide', title: 'Ratio kill and flag', stats: player_ratio, barmode: 'group', yaxis_type: 'none',
+			elem: 'plot1', title: 'Ratio kill and flag', stats: player_ratio, barmode: 'group', yaxis_type: 'none',
 			create_stat: ratio => ({ x: all_players, y: all_stats_by_type.ratio[ratio], name:  player_ratio_names[ratio] || capitalize(ratio), type: 'bar' }),
 		},
 		{
-			elem: 'kill_weapon', title: 'Percentage of kills by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
-			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
-		},
-		{
-			elem: 'death_weapon', title: 'Percentage of deaths by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
-			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
-		},
-		{
-			elem: 'chrono', title: 'Chrono (shortest flag time in seconds)', stats: [0], barmode: 'group', yaxis_type: 'none',
+			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0], barmode: 'group', yaxis_type: 'log',
 			create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 		},
 		{
-			elem: 'item', title: 'Percentage of collected items', stats: items, barmode: 'group', yaxis_type: 'log',
+			elem: 'plot3', title: 'Percentage of kills by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
+			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
+		},
+		{
+			elem: 'plot4', title: 'Percentage of deaths by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
+			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
+		},
+		{
+			elem: 'plot5', title: 'Percentage of collected items', stats: items, barmode: 'group', yaxis_type: 'log',
 			create_stat: item => ({ x: all_players, y: all_stats_by_type.item[item], name: items_names[item] || capitalize(item), type: 'bar' }),
 		},
 		{
-			elem: 'flag', title: 'Percentage of flag actions', stats: flag_stats, barmode: 'stack', yaxis_type: 'none',
+			elem: 'plot6', title: 'Percentage of flag actions', stats: flag_stats, barmode: 'stack', yaxis_type: 'none',
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'time', title: 'Time spent (in minutes)', stats: [0], barmode: 'group', yaxis_type: 'none',
+			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0], barmode: 'group', yaxis_type: 'none',
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
 		},
 	];
@@ -193,7 +193,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["kill_death_suicide", "chrono", "kill_weapon", "death_weapon", "item", "flag", "time", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 

@@ -42,7 +42,7 @@ function render(path)
 			$("#dashboard").show();
 			$("#history_error").hide();
 			$("#title").empty();
-			$("#title").append("<br/><h1> History from the " + date + " (" + type + ")</h1>");
+			$("#title").append("from the " + date + " (" + type + ")");
 			draw_dashboard(path);
 			rendered = true;
 		}
@@ -87,7 +87,7 @@ $(document).ready(function() {
 		}
 	});
 
-	let dir = root_dir + "/" + stats_type;
+	let dir = root_dir + "/daily";
 	let fileextension = ".json";
 	$.ajax({
 		//This will retrieve the contents of the folder if the folder is configured as 'browsable'
