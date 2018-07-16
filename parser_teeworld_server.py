@@ -337,7 +337,7 @@ def mergeStats(stats, newStats):
 				saveFlagT = newflagT
 			elif newflagT == 0 :
 				saveFlagT = oldflagT
-			else
+			else:
 				saveFlagT = min(newflagT, oldflagT)
 
 			merge_iterator(stats[playerName], newStats[playerName])
