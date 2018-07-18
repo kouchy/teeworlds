@@ -197,6 +197,13 @@ void CGameControllerCTF::Tick()
 						m_apFlags[i]->Reset();
 
 					GameServer()->CreateSoundGlobal(SOUND_CTF_CAPTURE);
+
+					if (m_aTeamscore[fi^1] >= g_Config.m_SvScorelimit)
+					{
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "%s team won", fi ? "red" : "blue");
+						GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+					}
 				}
 			}
 		}
