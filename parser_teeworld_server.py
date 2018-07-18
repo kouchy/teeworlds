@@ -33,14 +33,15 @@ deletedPlayerName = "__deletedplayer__" # this name is too long for a teeworlds
 def parseArguments():
 
 	parser = argparse.ArgumentParser(prog='parser_teeworld_server', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-	parser.add_argument('--act',  action='store',      dest='action', required=True, choices=["stdin", "log", "json", "rename", "help"])
-	parser.add_argument('--out',  action='store',      dest='out',    required=True, type=str                                          )
-	parser.add_argument('--old',  action='store',      dest='old',    type=str                                                         )
-	parser.add_argument('--new',  action='store',      dest='new',    type=str                                                         )
-	parser.add_argument('--arg',  action='store',      dest='arg',    type=str                                                         )
-	parser.add_argument('--echo', action='store_true', dest='echo'                                                                     )
+	parser.add_argument('--act',  action='store',      dest='action', required=True, choices=["stdin", "log", "json", "rename", "merge", "delete", "help"])
+	parser.add_argument('--out',  action='store',      dest='out',    required=True, type=str)
+	parser.add_argument('--old',  action='store',      dest='old',    type=str)
+	parser.add_argument('--new',  action='store',      dest='new',    type=str)
+	parser.add_argument('--arg',  action='store',      dest='arg',    type=str)
+	parser.add_argument('--echo', action='store_true', dest='echo')
 
 	return parser.parse_args()
+
 
 def printHelp():
 	print(" This program parse the logs of a teeworlds server in real time and return statistics on player in a JSON format.              ");
@@ -72,10 +73,20 @@ def printHelp():
 	print("                                                                                                                               ");
 	print("    * rename : This action load a JSON stats file given through the '--old' argument, to rename a player. The current player   ");
 	print("               name is given in the '--arg' argument and its new name is given in the '--new' argument:                        ");
-	print("                 $ python3 parser_teeworld_server.py --act rename --old stats.json --out newname.json --arg oldname --new newname");
+	print("                 $ python3 parser_teeworld_server.py --act rename --old stats.json --out newstats.json --arg oldname --new newname");
 	print("               The '--out' argument gives the output filename.                                                                 ");
-	print("               If the '--new' argument is an already existing player then merge them together.                                 ");
-	print("               If the '--new' argument is empty ('--new \"\"') then the mode deletes the player from the stats.                ");
+	print("                                                                                                                               ");
+	print("    * merge  : This action load a JSON stats file given through the '--old' argument, to merge two players. The first player   ");
+	print("               name that will disappear is given in the '--arg' argument and the second name that will receive those values    ");
+	print("               is given in the '--new' argument:                                                                               ");
+	print("                 $ python3 parser_teeworld_server.py --act merge --old stats.json --out newstats.json --arg name1 --new name2  ");
+	print("               The '--out' argument gives the output filename.                                                                 ");
+	print("                                                                                                                               ");
+	print("    * delete : This action load a JSON stats file given through the '--old' argument, to delete a player. The player name to   ");
+	print("               delete is given in the '--arg' argument:                                                                        ");
+	print("                 $ python3 parser_teeworld_server.py --act delete --old stats.json --out newstats.json --arg name              ");
+	print("               The '--out' argument gives the output filename. To keep balance in the stats, this player will appear with a    ");
+	print("               special name in the other player's stats (__deletedplayer__).                                                   ");
 	print("                                                                                                                               ");
 	print("    * help : display this help message.                                                                                        ");
 	print("                                                                                                                               ");
@@ -387,73 +398,86 @@ def mergeStats(stats, newStats):
 			stats[playerName]['flag']['min_time'] = saveFlagT
 
 
+def deletePlayer(stats, oldName):
+	if not oldName in stats.keys():
+		print("Warning, given player name to delete '" + oldName + "' has not been found in the given stats.")
+		return
+
+	del stats[oldName]
+
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			try:
+				stats[playerName]['kill']['player'][deletedPlayerName] += stats[playerName]['kill']['player'][oldName]
+			except KeyError:
+				stats[playerName]['kill']['player'][deletedPlayerName] = stats[playerName]['kill']['player'][oldName]
+
+			del stats[playerName]['kill']['player'][oldName]
+
+		if oldName in stats[playerName]['death']['player']:
+			try:
+				stats[playerName]['death']['player'][deletedPlayerName] += stats[playerName]['death']['player'][oldName]
+			except KeyError:
+				stats[playerName]['death']['player'][deletedPlayerName] = stats[playerName]['death']['player'][oldName]
+
+			del stats[playerName]['death']['player'][oldName]
+
+
+def mergePlayer(stats, oldName, newName):
+	if not oldName in stats.keys():
+		print("Error, given player name 1 to merge '" + oldName + "' has not been found in the given stats.")
+		return
+
+	if not newName in stats.keys():
+		print("Error, given player name 2 to merge '" + newName + "' has not been found in the given stats.")
+		return
+
+	tempstats = {}
+	tempstats[newName] = stats[oldName]
+
+	del stats[oldName]
+
+	mergeStats(stats, tempstats)
+
+
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			try:
+				stats[playerName]['kill']['player'][newName] += stats[playerName]['kill']['player'][oldName]
+			except KeyError:
+				stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
+
+			del stats[playerName]['kill']['player'][oldName]
+
+		if oldName in stats[playerName]['death']['player']:
+			try:
+				stats[playerName]['death']['player'][newName] += stats[playerName]['death']['player'][oldName]
+			except KeyError:
+				stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
+
+			del stats[playerName]['death']['player'][oldName]
+
+
 def renamePlayer(stats, oldName, newName):
 	if not oldName in stats.keys():
-		print("Warning, given player '" + oldName + "' has not been found in the given stats.")
+		print("Error, given current player name '" + oldName + "' has not been found in the given stats.")
+		return
 
+	if newName in stats.keys():
+		print("Error, given new player name '" + newName + "' already exists.")
+		return
 
-	elif newName == "": # then delete the player from the stats
-		del stats[oldName]
+	stats[newName] = stats[oldName]
+	del stats[oldName]
 
-		for playerName in stats.keys():
-			if oldName in stats[playerName]['kill']['player']:
-				try:
-					stats[playerName]['kill']['player'][deletedPlayerName] += stats[playerName]['kill']['player'][oldName]
-				except KeyError:
-					stats[playerName]['kill']['player'][deletedPlayerName] = stats[playerName]['kill']['player'][oldName]
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
+			del stats[playerName]['kill']['player'][oldName]
 
-				del stats[playerName]['kill']['player'][oldName]
-
-			if oldName in stats[playerName]['death']['player']:
-				try:
-					stats[playerName]['death']['player'][deletedPlayerName] += stats[playerName]['death']['player'][oldName]
-				except KeyError:
-					stats[playerName]['death']['player'][deletedPlayerName] = stats[playerName]['death']['player'][oldName]
-
-				del stats[playerName]['death']['player'][oldName]
-
-
-	elif newName in stats.keys(): # merge old player into the "new existing player"
-
-		tempstats = {}
-		tempstats[newName] = stats[oldName]
-
-		del stats[oldName]
-
-		mergeStats(stats, tempstats)
-
-
-		for playerName in stats.keys():
-			if oldName in stats[playerName]['kill']['player']:
-				try:
-					stats[playerName]['kill']['player'][newName] += stats[playerName]['kill']['player'][oldName]
-				except KeyError:
-					stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
-
-				del stats[playerName]['kill']['player'][oldName]
-
-			if oldName in stats[playerName]['death']['player']:
-				try:
-					stats[playerName]['death']['player'][newName] += stats[playerName]['death']['player'][oldName]
-				except KeyError:
-					stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
-
-				del stats[playerName]['death']['player'][oldName]
-
-
-	else : # simple renaming
-
-		stats[newName] = stats[oldName]
-		del stats[oldName]
-
-		for playerName in stats.keys():
-			if oldName in stats[playerName]['kill']['player']:
-				stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
-				del stats[playerName]['kill']['player'][oldName]
-
-			if oldName in stats[playerName]['death']['player']:
-				stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
-				del stats[playerName]['death']['player'][oldName]
+		if oldName in stats[playerName]['death']['player']:
+			stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
+			del stats[playerName]['death']['player'][oldName]
 
 
 def computeRatios(stats):
@@ -562,6 +586,14 @@ def run(args):
 
 	elif args.action == "rename":
 		renamePlayer(current_stats, args.arg, args.new)
+
+
+	elif args.action == "merge":
+		mergePlayer(current_stats, args.arg, args.new)
+
+
+	elif args.action == "delete":
+		deletePlayer(current_stats, args.arg)
 
 
 	else:
