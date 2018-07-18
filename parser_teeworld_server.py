@@ -104,8 +104,8 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'with_flag': 0}
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
-		stats[playerKey]['ratio'  ] = {'kill': 0, 'flag': 0}
-		stats[playerKey]['game'   ] = {'time': 0, 'team': ""}
+		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None}
+		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'win': 0, 'lost': 0}
 
 
 def getWeaponName(weapon):
@@ -142,6 +142,8 @@ def playerEnterTime(playerName):
 
 	enterTime = time.time()
 
+	global players_in_game
+
 	try:
 		if players_in_game[playerName] == 0:
 			players_in_game[playerName] = enterTime
@@ -152,6 +154,8 @@ def playerEnterTime(playerName):
 
 
 def playerLeaveTime(playerName):
+
+	global players_in_game
 
 	try:
 		if players_in_game[playerName] == 0:
@@ -485,9 +489,13 @@ def computeRatios(stats):
 		total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
 		if total_death != 0:
 			stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
+		else:
+			stats[playerName]['ratio']['kill'] = None
 
 		if stats[playerName]['flag']['grab'] != 0:
 			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
+		else:
+			stats[playerName]['ratio']['flag'] = None
 
 
 def dumpStats(stats):
@@ -522,6 +530,8 @@ def run(args):
 	print('')
 
 	global outFile
+	global current_stats
+
 	outFile = args.out
 
 
