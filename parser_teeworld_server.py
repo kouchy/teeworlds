@@ -311,10 +311,10 @@ def parseLogLine(logline, stats):
 			return
 
 
-def merge_iterator(oldDict, newDict):
+def recursiveMerge(oldDict, newDict):
 	for k, v in newDict.items():
 		if isinstance(v, dict):
-			merge_iterator(oldDict[k], newDict[k])
+			recursiveMerge(oldDict[k], newDict[k])
 		else:
 			try:
 				oldDict[k] += newDict[k]
@@ -340,7 +340,7 @@ def mergeStats(stats, newStats):
 			else:
 				saveFlagT = min(newflagT, oldflagT)
 
-			merge_iterator(stats[playerName], newStats[playerName])
+			recursiveMerge(stats[playerName], newStats[playerName])
 
 
 			stats[playerName]['flag']['min_time'] = saveFlagT
