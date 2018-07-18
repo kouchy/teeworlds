@@ -105,7 +105,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None}
-		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'win': 0, 'lost': 0}
+		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'victory': 0, 'defeat': 0}
 
 
 def getWeaponName(weapon):
@@ -187,7 +187,8 @@ def parseLogLine(logline, stats, countGameTime=True, outFile=""):
 
 		logType = logTitle[1].split(" ",1)
 
-		if logType[0] == "kill":
+		if logType[0] == "kill": # kill killer='1:Bigdaddy' victim='0:Badmom' weapon=1 special=0
+
 
 			killerPosStart = logType[1].find(":") +1
 			killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
@@ -250,7 +251,7 @@ def parseLogLine(logline, stats, countGameTime=True, outFile=""):
 
 			return
 
-		elif logType[0] == "pickup":
+		elif logType[0] == "pickup": # pickup player='0:Badmom' item=1/0
 
 			playerPosStart = logType[1].find(":") +1
 			playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
@@ -268,8 +269,8 @@ def parseLogLine(logline, stats, countGameTime=True, outFile=""):
 
 			return
 
-		elif logType[0].find("flag") == 0:
-			if len(logType) == 1: # == "flag_return\n" -> flag returned automatically
+		elif logType[0].find("flag") == 0: # flag_grab player='0:Badmom'
+			if len(logType) == 1: # == "flag_return" -> flag returned automatically
 				return
 
 			playerPosStart = logType[1].find(":") +1
@@ -286,6 +287,20 @@ def parseLogLine(logline, stats, countGameTime=True, outFile=""):
 				stats[playerName]['flag']['return'] += 1
 
 			return
+
+		elif logType[0] == "victory": # victory blue team
+			teamPosStart = 0
+			teamPosEnd   = logType[1].find(" team", teamPosStart+1)
+			teamName     = logType[1][teamPosStart:teamPosEnd]
+
+			for playerName in stats.keys():
+				if stats[playerName]['game']['team'] == teamName: # it's a victory !
+					stats[playerName]['game']['victory'] += 1
+				elif stats[playerName]['game']['team'] != "": # it's a defeat
+					stats[playerName]['game']['defeat'] += 1
+				#else : not in game
+
+
 
 	elif logTitle[0].find("chat") != -1:
 
