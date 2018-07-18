@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# This program parse the logs of a teeworlds server in real time and return statistics on player in a JSON format.
+# Run:  $ python3 parser_teeworld_server.py --act help
+# to display the whole story help message.
 
 # =============================================================================
 # ==================================================================== PACKAGES
@@ -13,32 +16,13 @@ import datetime
 # =============================================================================
 
 
-
-
-# =============================================================================
-# ================================================================== PARAMETERS
-
-parser = argparse.ArgumentParser(prog='aff3ct-test-regression', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('--act', action='store', dest='action',     choices=["stdin", "log", "json"], default="stdin", help="Action to execute during the merge with old stats (from server log given in standard input, a server log file, or another json stats file.")
-parser.add_argument('--new', action='store', dest='newStats',   type=str,                                          help="Path to the new stats/log file to add to the old stats file (merge).")
-parser.add_argument('--old', action='store', dest='oldStats',   type=str,                                          help="Path to the old stats file (if furnished, then do not create a stats file per day in 'stdin' action mode.")
-parser.add_argument('--out', action='store', dest='outPath',    type=str,  default="stats",                        help="Path to the generated stats files (full name when act == 'log' or 'json', and only header when 'stdin'.")
-parser.add_argument('--echo', action='store_true', dest='echo',                                                    help="Print the received standard input.")
-
-args = parser.parse_args()
-
-# ================================================================== PARAMETERS
-# =============================================================================
-
-
 # =============================================================================
 # =============================================================== GLOBAL VALUES
 
 current_stats = {}
-dump_time = time.time()
-outFile = args.outPath
-
 players_in_game = {}
+outFile = ""
+deletedPlayerName = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
 
 # =============================================================== GLOBAL VALUES
 # =============================================================================
@@ -46,6 +30,71 @@ players_in_game = {}
 
 # =============================================================================
 # =================================================================== FUNCTIONS
+def parseArguments():
+
+	parser = argparse.ArgumentParser(prog='parser_teeworld_server', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+	parser.add_argument('--act',  action='store',      dest='action', required=True, choices=["stdin", "log", "json", "rename", "merge", "delete", "help"])
+	parser.add_argument('--out',  action='store',      dest='out',    required=True, type=str)
+	parser.add_argument('--old',  action='store',      dest='old',    type=str)
+	parser.add_argument('--new',  action='store',      dest='new',    type=str)
+	parser.add_argument('--arg',  action='store',      dest='arg',    type=str)
+	parser.add_argument('--echo', action='store_true', dest='echo')
+
+	return parser.parse_args()
+
+
+def printHelp():
+	print(" This program parse the logs of a teeworlds server in real time and return statistics on player in a JSON format.              ");
+	print(" This script can also parse a server's log file to return stats. It can also merge several stats together.                     ");
+	print(" To select the action to realize, use the '--act' argument:                                                                    ");
+	print("                                                                                                                               ");
+	print("    * stdin  : This action parses in real time the server's log. Use a piped '|' command.                                      ");
+	print("               In this mode, the parser will create a daily file with a header given in the '--out' argument                   ");
+	print("                 $ ./teeworlds_server | python3 parser_teeworld_server.py --act stdin --out stats                              ");
+	print("               Then a stats JSON file will be created everyday with such a name 'stats_20180718.json'                          ");
+	print("               Output stats file are updated every 0.5 s if anything happens on the server log. So sometimes the JSON          ");
+	print("               file may not appear updated even if player actions are took into account. Just do another action after          ");
+	print("               this half second.                                                                                               ");
+	print("               You can also use given an old JSON stats file to complete with the '--old' argument:                            ");
+	print("                 $ ./teeworlds_server | python3 parser_teeworld_server.py --act stdin --out stats.json --old old_stats.json    ");
+	print("               In this mode, the parser loads stats from the old file, and completes them with new logs in real time           ");
+	print("               from the server, to dump them in the given filename in the '--out' argument (!!not a daily one!!).              ");
+	print("               You can also use the '--echo' argument to print the server logs, else they are hidden.                          ");
+	print("                                                                                                                               ");
+	print("    * log    : This action parses a server log file given through the '--new' argument, and return the stats in the            ");
+	print("               file given in the '--out' argument:                                                                             ");
+	print("                 $ python3 parser_teeworld_server.py --act log --new new_server_logs_filename --out stats.json                 ");
+	print("               You can also add a JSON stats file in the '--old' argument to load them first and complete them with the        ");
+	print("               new log. The game time count is deactivated in this mode.                                                       ");
+	print("                                                                                                                               ");
+	print("    * json   : This action load a JSON stats file given through the '--old' argument, and another through the '--new'          ");
+	print("               argument and merge them into a unique JSON stats file given in the '--out' argument:                            ");
+	print("                 $ python3 parser_teeworld_server.py --act json --new stats1.json --old stats2.json --out merged_stats.json    ");
+	print("                                                                                                                               ");
+	print("    * rename : This action load a JSON stats file given through the '--old' argument, to rename a player. The current player   ");
+	print("               name is given in the '--arg' argument and its new name is given in the '--new' argument:                        ");
+	print("                 $ python3 parser_teeworld_server.py --act rename --old stats.json --out newstats.json --arg oldname --new newname");
+	print("               The '--out' argument gives the output filename.                                                                 ");
+	print("                                                                                                                               ");
+	print("    * merge  : This action load a JSON stats file given through the '--old' argument, to merge two players. The first player   ");
+	print("               name that will disappear is given in the '--arg' argument and the second name that will receive those values    ");
+	print("               is given in the '--new' argument:                                                                               ");
+	print("                 $ python3 parser_teeworld_server.py --act merge --old stats.json --out newstats.json --arg name1 --new name2  ");
+	print("               The '--out' argument gives the output filename.                                                                 ");
+	print("                                                                                                                               ");
+	print("    * delete : This action load a JSON stats file given through the '--old' argument, to delete a player. The player name to   ");
+	print("               delete is given in the '--arg' argument:                                                                        ");
+	print("                 $ python3 parser_teeworld_server.py --act delete --old stats.json --out newstats.json --arg name              ");
+	print("               The '--out' argument gives the output filename. To keep balance in the stats, this player will appear with a    ");
+	print("               special name in the other player's stats (__deletedplayer__).                                                   ");
+	print("                                                                                                                               ");
+	print("    * help : display this help message.                                                                                        ");
+	print("                                                                                                                               ");
+	print(" Notes on the parsing of server logs:                                                                                          ");
+	print("  * When a player is alone in the game, only game time and flag racing/capture time are saved. Game stats are ignored (suicide,");
+	print("     flag grap/capture, picked up items, ...)                                                                                  ");
+	print("  * When a player is 'spectator' its game time does not increase.                                                              ");
+
 
 def initPlayer(playerKey, stats):
 	if not playerKey in stats.keys():
@@ -126,7 +175,7 @@ def countNumPlayersInGame():
 	return count
 
 
-def parseLogLine(logline, stats):
+def parseLogLine(logline, stats, countGameTime=True, outFile=""):
 
 	logTitle = logline.split(": ",1)
 
@@ -270,7 +319,8 @@ def parseLogLine(logline, stats):
 
 			initPlayer(playerName, stats)
 
-			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+			if countGameTime:
+				stats[playerName]['game']['time'] += playerLeaveTime(playerName)
 
 			teamName = ""
 
@@ -303,18 +353,20 @@ def parseLogLine(logline, stats):
 
 			initPlayer(playerName, stats)
 
-			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+			if countGameTime:
+				stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+
 			stats[playerName]['game']['team'] = ""
 
-			dumpStats(current_stats) # dump the stats in the case where the last player left then the server returns nothing else
+			dumpStats(stats) # dump the stats to prevent the case where the last player left then the server returns nothing else
 
 			return
 
 
-def merge_iterator(oldDict, newDict):
+def recursiveMerge(oldDict, newDict):
 	for k, v in newDict.items():
 		if isinstance(v, dict):
-			merge_iterator(oldDict[k], newDict[k])
+			recursiveMerge(oldDict[k], newDict[k])
 		else:
 			try:
 				oldDict[k] += newDict[k]
@@ -340,10 +392,92 @@ def mergeStats(stats, newStats):
 			else:
 				saveFlagT = min(newflagT, oldflagT)
 
-			merge_iterator(stats[playerName], newStats[playerName])
+			recursiveMerge(stats[playerName], newStats[playerName])
 
 
 			stats[playerName]['flag']['min_time'] = saveFlagT
+
+
+def deletePlayer(stats, oldName):
+	if not oldName in stats.keys():
+		print("Warning, given player name to delete '" + oldName + "' has not been found in the given stats.")
+		return
+
+	del stats[oldName]
+
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			try:
+				stats[playerName]['kill']['player'][deletedPlayerName] += stats[playerName]['kill']['player'][oldName]
+			except KeyError:
+				stats[playerName]['kill']['player'][deletedPlayerName] = stats[playerName]['kill']['player'][oldName]
+
+			del stats[playerName]['kill']['player'][oldName]
+
+		if oldName in stats[playerName]['death']['player']:
+			try:
+				stats[playerName]['death']['player'][deletedPlayerName] += stats[playerName]['death']['player'][oldName]
+			except KeyError:
+				stats[playerName]['death']['player'][deletedPlayerName] = stats[playerName]['death']['player'][oldName]
+
+			del stats[playerName]['death']['player'][oldName]
+
+
+def mergePlayer(stats, oldName, newName):
+	if not oldName in stats.keys():
+		print("Error, given player name 1 to merge '" + oldName + "' has not been found in the given stats.")
+		return
+
+	if not newName in stats.keys():
+		print("Error, given player name 2 to merge '" + newName + "' has not been found in the given stats.")
+		return
+
+	tempstats = {}
+	tempstats[newName] = stats[oldName]
+
+	del stats[oldName]
+
+	mergeStats(stats, tempstats)
+
+
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			try:
+				stats[playerName]['kill']['player'][newName] += stats[playerName]['kill']['player'][oldName]
+			except KeyError:
+				stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
+
+			del stats[playerName]['kill']['player'][oldName]
+
+		if oldName in stats[playerName]['death']['player']:
+			try:
+				stats[playerName]['death']['player'][newName] += stats[playerName]['death']['player'][oldName]
+			except KeyError:
+				stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
+
+			del stats[playerName]['death']['player'][oldName]
+
+
+def renamePlayer(stats, oldName, newName):
+	if not oldName in stats.keys():
+		print("Error, given current player name '" + oldName + "' has not been found in the given stats.")
+		return
+
+	if newName in stats.keys():
+		print("Error, given new player name '" + newName + "' already exists.")
+		return
+
+	stats[newName] = stats[oldName]
+	del stats[oldName]
+
+	for playerName in stats.keys():
+		if oldName in stats[playerName]['kill']['player']:
+			stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
+			del stats[playerName]['kill']['player'][oldName]
+
+		if oldName in stats[playerName]['death']['player']:
+			stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
+			del stats[playerName]['death']['player'][oldName]
 
 
 def computeRatios(stats):
@@ -358,6 +492,7 @@ def computeRatios(stats):
 
 def dumpStats(stats):
 	computeRatios(stats)
+
 	with open(outFile, 'w') as outStatsFile:
 	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
 
@@ -370,40 +505,43 @@ def signal_handler(sig, frame):
 def getOutFileName(header, date):
 	return header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day) + ".json"
 
-
 # =================================================================== FUNCTIONS
 # =============================================================================
 
-if __name__ == '__main__':
+def run(args):
 
 	print('Teeworld server parser')
 	print('------------')
 	print('')
 	print('Parameters:')
-	print('action         =', args.action  )
-	print('new stats file =', args.newStats)
-	print('old stats file =', args.oldStats)
-	print('output path    =', args.outPath )
-	print('echo           =', args.echo    )
+	print('action         =', args.action)
+	print('new stats file =', args.new   )
+	print('old stats file =', args.old   )
+	print('output path    =', args.out   )
+	print('echo           =', args.echo  )
 	print('')
+
+	global outFile
+	outFile = args.out
 
 
 	signal.signal(signal.SIGINT, signal_handler)
 
 
 	# get old stats
-	if args.oldStats is not None:
-		with open(args.oldStats) as oldStatsFile:
+	if args.old is not None:
+		with open(args.old) as oldStatsFile:
 			current_stats = json.load(oldStatsFile)
 
-	create_dayly_file = args.oldStats is None;
+	create_dayly_file = args.old is None;
 
 
 	if args.action == "stdin":
+		dump_time = time.time()
 
 		if create_dayly_file:
 			current_date = datetime.date.today()
-			outFile = getOutFileName(args.outPath, current_date)
+			outFile = getOutFileName(args.out, current_date)
 
 			try :
 				with open(outFile) as oldStatsFile:
@@ -420,13 +558,13 @@ if __name__ == '__main__':
 			if args.echo:
 				print("server: " + log)
 
-			parseLogLine(log, current_stats)
+			parseLogLine(log, current_stats, True, args.out)
 
 			if (dump_time + 0.5) < time.time():
 				if create_dayly_file and current_date != datetime.date.today(): # the day changed
 					dumpStats(current_stats) # save correctly the old stats before changing of file name
 					current_date = datetime.date.today()
-					outFile = getOutFileName(args.outPath, current_date)
+					outFile = getOutFileName(args.out, current_date)
 					print("parser: new output filename: " + outFile)
 					current_stats = {}
 
@@ -436,16 +574,41 @@ if __name__ == '__main__':
 
 	elif args.action == "log":
 		# read server log file
-		with open(args.logFile) as logFile:
+		with open(args.new) as logFile:
 			for log in logFile:
-				parseLogLine(log, current_stats)
+				parseLogLine(log, current_stats, False, "")
 
 
 	elif args.action == "json":
-		with open(args.newStats) as newStatsFile:
+		with open(args.new) as newStatsFile:
 			mergeStats(current_stats, json.load(newStatsFile))
+
+
+	elif args.action == "rename":
+		renamePlayer(current_stats, args.arg, args.new)
+
+
+	elif args.action == "merge":
+		mergePlayer(current_stats, args.arg, args.new)
+
+
+	elif args.action == "delete":
+		deletePlayer(current_stats, args.arg)
+
 
 	else:
 		raise ValueError('args.action is unknown.')
 
 	dumpStats(current_stats)
+
+
+
+if __name__ == '__main__':
+
+	args = parseArguments()
+
+	if args.action == "help" :
+		printHelp()
+
+	else:
+		run(args)
