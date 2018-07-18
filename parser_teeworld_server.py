@@ -52,7 +52,7 @@ def printHelp():
 	print("    * stdin  : This action parses in real time the server's log. Use a piped '|' command.                                      ");
 	print("               In this mode, the parser will create a daily file with a header given in the '--out' argument                   ");
 	print("                 $ ./teeworlds_server | python3 parser_teeworld_server.py --act stdin --out stats                              ");
-	print("               Then a stats JSON file will be created everyday with such a name 'stats_20180718.json'                          ");
+	print("               Then a stats JSON file will be created everyday with such a name 'stats_20180718_mapname.json'                  ");
 	print("               Output stats file are updated every 0.5 s if anything happens on the server log. So sometimes the JSON          ");
 	print("               file may not appear updated even if player actions are took into account. Just do another action after          ");
 	print("               this half second.                                                                                               ");
