@@ -1,6 +1,57 @@
 var players_data = [];
-var players_dates = [];
 var first_time = true;
+
+// Create a new empty stat object to hold the stats
+function get_new_empty_stats_date() {
+	let schema = {
+		kill: { number: { date: [], val: [] }, weapon: {} },
+		death: { number: { date: [], val: [] }, weapon: {} },
+		suicide: { number: { date: [], val: [] } },
+		item: {},
+		flag: { min_time: { date: [], val: [] } },
+		game: { time: { date: [], val: [] } },
+		ratio: { flag: { date: [], val: [] }, kill: { date: [], val: [] } },
+	};
+	// Fill up with info about stats
+	weapons.forEach(w => {
+		schema.kill.weapon[w] = { date: [], val: [] };
+		schema.death.weapon[w] = { date: [], val: [] };
+	})
+	items.forEach(i => schema.item[i] = { date: [], val: [] });
+	flag_stats.forEach(f => schema.flag[f] = { date: [], val: [] });
+	return schema;
+}
+
+function sorted_index_date(array, value) {
+	var low = 0, high = array.length;
+
+	while (low < high) {
+		var mid = low + high >>> 1;
+		if (array[mid].getTime() < value.getTime()) low = mid + 1;
+		else high = mid;
+	}
+	return low;
+}
+
+function reduce_stat_date(data, element, date, stat_paths = []) {
+	// Recursively accumulate each stat.
+	// At the end of all this, each stat will be a vector matching the players' vector
+	Object.keys(element).forEach(substat => {
+		if (Array.isArray(element[substat].date) && Array.isArray(element[substat].val)) {
+			let new_stat = data;
+			stat_paths.forEach(path => new_stat = new_stat[path]);
+			let val = new_stat[substat];
+			if (val != 0)
+			{
+				let pos = sorted_index_date(element[substat].date, date);
+				element[substat].val.splice(pos, 0, new_stat[substat]);
+				element[substat].date.splice(pos, 0, date);
+			}
+		} else {
+			reduce_stat_date(data, element[substat], date, stat_paths.concat(substat));
+		}
+	});
+}
 
 //main
 $(document).ready(function() {
@@ -29,23 +80,21 @@ $(document).ready(function() {
 					day: parseInt(date.slice(6, 8))
 				}
 
+				let d = new Date(obj_date.year, obj_date.month -1, obj_date.day);
+
 				$.getJSON(dir+"/"+filename, function(json){
 					if ($.isEmptyObject(json) == false)
 					{
 						Object.keys(json).forEach(pseudo => {
-							let	stats = (players_data[pseudo] == undefined) ? get_new_empty_stats() : players_data[pseudo];
+							let	stats = (players_data[pseudo] == undefined) ? get_new_empty_stats_date() : players_data[pseudo];
 							// Recursively browse the json and accumulate data
-							reduce_stat(json[pseudo], stats);
+							reduce_stat_date(json[pseudo], stats, d);
 							players_data[pseudo] = stats;
-
-							if (players_dates[pseudo] == undefined)
-								players_dates[pseudo] = [];
-							players_dates[pseudo].push(new Date(obj_date.year, obj_date.month -1, obj_date.day));
 						});
 					}
 				});
 			});
-	    }
+		}
 	});
 
 	$(document).ajaxStop(function () {
@@ -56,37 +105,36 @@ $(document).ready(function() {
 			$("#loader").hide();
 
 			let all_players = Object.keys(players_data);
-			console.log(players_data);
 
 			// Convert times to minute
 			all_players.forEach(p => {
-				players_data[p].game.time = players_data[p].game.time.map(t => Math.round(t/60.0));
+				players_data[p].game.time.val = players_data[p].game.time.val.map(t => Math.round(t/60.0));
 			});
 
 			plots = [
 				{
 					elem: 'plot1', title: 'Ratio kills/deaths over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].ratio.kill, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].ratio.kill.date, y: players_data[pseudo].ratio.kill.val, name: pseudo, type: 'scatter' }),
 				},
 				{
 					elem: 'plot2', title: 'Ratio flag over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].ratio.flag, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].ratio.flag.date, y: players_data[pseudo].ratio.flag.val, name: pseudo, type: 'scatter' }),
 				},
 				{
 					elem: 'plot3', title: 'Kills over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].kill.number, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].kill.number.date, y: players_data[pseudo].kill.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
 					elem: 'plot4', title: 'Deaths over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].death.number, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].death.number.date, y: players_data[pseudo].death.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
 					elem: 'plot5', title: 'Suicides over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].suicide.number, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].suicide.number.date, y: players_data[pseudo].suicide.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
 					elem: 'plot6', title: 'Time spent (in minutes) over time', stats: player_ratio, yaxis_type: 'none',
-					create_stat: pseudo => ({ x: players_dates[pseudo], y: players_data[pseudo].game.time, name: pseudo, type: 'scatter' }),
+					create_stat: pseudo => ({ x: players_data[pseudo].game.time.date, y: players_data[pseudo].game.time.val, name: pseudo, type: 'scatter' }),
 				},
 			];
 

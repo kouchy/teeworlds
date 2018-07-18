@@ -93,36 +93,36 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 {
 	plots = [
 		{
-			elem: 'plot1', title: 'Kills, deaths and suicides', stats: player_stats,
+			elem: 'plot1', title: 'Kills, deaths and suicides', stats: player_stats, yaxis_type: 'none',
 			create_stat: stat => ({ x: all_players, y: all_stats_by_type[stat].number, name: capitalize(stat), type: 'bar' }),
 		},
 		{
-			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0],
+			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0], yaxis_type: 'log',
 			create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 		},
 		{
-			elem: 'plot3', title: 'Kills by weapons', stats: weapons,
+			elem: 'plot3', title: 'Kills by weapons', stats: weapons, yaxis_type: 'none',
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot4', title: 'Deaths by weapons', stats: weapons,
+			elem: 'plot4', title: 'Deaths by weapons', stats: weapons, yaxis_type: 'none',
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot5', title: 'Collected items', stats: items,
+			elem: 'plot5', title: 'Collected items', stats: items, yaxis_type: 'none',
 			create_stat: item => ({ x: all_players, y: all_stats_by_type.item[item], name: items_names[item] || capitalize(item), type: 'bar' }),
 		},
 		{
-			elem: 'plot6', title: 'Flag actions', stats: flag_stats,
+			elem: 'plot6', title: 'Flag actions', stats: flag_stats, yaxis_type: 'none',
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0],
+			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0], yaxis_type: 'none',
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
 		},
 	];
 
-	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true }));
+	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, yaxis: { type: plot_data.yaxis_type, autorange: true} }));
 }
 
 function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos)
