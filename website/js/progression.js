@@ -59,11 +59,11 @@ $(document).ready(function() {
 	let month = currentTime.getMonth() +1;
 	let day = currentTime.getDate();
 	let year = currentTime.getFullYear();
-	let path = "stats_" + year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day + ".json";
-	draw_online_players(root_dir + "/daily/" + path, true);
-	setInterval(function() { draw_online_players(root_dir + "/daily/" + path, false); }, 5000);
+	let path = "stats_" + year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day + "_" + g_map + ".json";
+	draw_online_players(g_root_dir + "/daily/" + path, true);
+	setInterval(function() { draw_online_players(g_root_dir + "/daily/" + path, false); }, 5000);
 
-	let dir = root_dir + "/daily";
+	let dir = g_root_dir + "/daily";
 	let fileextension = ".json";
 	$.ajax({
 		//This will retrieve the contents of the folder if the folder is configured as 'browsable'
@@ -72,27 +72,28 @@ $(document).ready(function() {
 			// List all json file names in the page
 			$(data).find("a:contains(" + fileextension + ")").each(function () {
 				let filename = this.href.replace(window.location.host, "").replace("http:///", "");
-				let id = filename.replace(/\.[^/.]+$/, "");
-				let date = id.replace(/stats_/g, "");
-				let obj_date = {
-					year: parseInt(date.slice(0, 4)),
-					month: parseInt(date.slice(4, 6)),
-					day: parseInt(date.slice(6, 8))
-				}
-
-				let d = new Date(obj_date.year, obj_date.month -1, obj_date.day);
-
-				$.getJSON(dir+"/"+filename, function(json){
-					if ($.isEmptyObject(json) == false)
-					{
-						Object.keys(json).forEach(pseudo => {
-							let	stats = (players_data[pseudo] == undefined) ? get_new_empty_stats_date() : players_data[pseudo];
-							// Recursively browse the json and accumulate data
-							reduce_stat_date(json[pseudo], stats, d);
-							players_data[pseudo] = stats;
-						});
+				if (get_map_from_path(filename) == g_map)
+				{
+					let id = filename.replace(/\.[^/.]+$/, "");
+					let date = id.replace(/stats_/g, "");
+					let obj_date = {
+						year: parseInt(date.slice(0, 4)),
+						month: parseInt(date.slice(4, 6)),
+						day: parseInt(date.slice(6, 8))
 					}
-				});
+					let d = new Date(obj_date.year, obj_date.month -1, obj_date.day);
+					$.getJSON(dir+"/"+filename, function(json){
+						if ($.isEmptyObject(json) == false)
+						{
+							Object.keys(json).forEach(pseudo => {
+								let	stats = (players_data[pseudo] == undefined) ? get_new_empty_stats_date() : players_data[pseudo];
+								// Recursively browse the json and accumulate data
+								reduce_stat_date(json[pseudo], stats, d);
+								players_data[pseudo] = stats;
+							});
+						}
+					});
+				}
 			});
 		}
 	});
