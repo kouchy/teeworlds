@@ -455,11 +455,11 @@ def pasreLogLineGame(message, stats):
 
 		healthPosStart = weaponPosEnd + 8
 		healthPosEnd   = logType[1].find(" ", healthPosStart+1)
-		healthName     = getWeaponName(logType[1][healthPosStart:healthPosEnd])
+		healthName     = logType[1][healthPosStart:healthPosEnd]
 		health = int(healthName)
 
 		armorPosStart = healthPosEnd + 7
-		armorName     = getWeaponName(logType[1][armorPosStart:])
+		armorName     = logType[1][armorPosStart:]
 		armor = int(armorName)
 
 
