@@ -126,8 +126,9 @@ def computeRatios(stats):
 		total_took_damage = 0
 		total_give_damage = 0
 		try:
-			total_took_damage = (stats[playerName]['take']['armor'] + stats[playerName]['take']['health'] + stats[playerName]['itself']['armor'] + stats[playerName]['itself']['health'])
-			total_give_damage = (stats[playerName]['give']['armor'] + stats[playerName]['give']['health'])
+			total_took_damage = (stats[playerName]['damage']['take']['armor'] + stats[playerName]['damage']['take']['health']
+			                   + stats[playerName]['damage']['itself']['armor'] + stats[playerName]['damage']['itself']['health'])
+			total_give_damage = (stats[playerName]['damage']['give']['armor'] + stats[playerName]['damage']['give']['health'])
 		except KeyError:
 			pass
 
