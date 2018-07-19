@@ -3,6 +3,7 @@ var items = ['heart', 'armor', 'shotgun', 'grenade', 'laser', 'ninja'];
 var player_stats = ['kill', 'death', 'suicide'];
 var player_ratio = ['kill', 'flag'];
 var flag_stats = ['capture', 'grab', 'return'];
+var game_win = ['victory', 'defeat'];
 // only 'armor' is not simply capitalized
 var items_names = { 'armor': 'Shield' };
 // 'return' is aliased to 'Bring back'
@@ -61,7 +62,7 @@ function get_new_empty_stats() {
 		suicide: { number: [] },
 		item: {},
 		flag: { min_time: [] },
-		game: { time: [] },
+		game: { time: [], victory: [], defeat: [] },
 		ratio: { flag: [], kill: [] },
 	};
 	// Fill up with info about stats
@@ -125,7 +126,11 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0], yaxis_type: 'none',
+			elem: 'plot7', title: 'Victories and defeats', stats: game_win, yaxis_type: 'none',
+			create_stat: victory => ({ x: all_players, y: all_stats_by_type.game[victory], name: capitalize(victory), type: 'bar' }),
+		},
+		{
+			elem: 'plot9', title: 'Time spent (in minutes)', stats: [0], yaxis_type: 'none',
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
 		},
 	];
@@ -140,6 +145,11 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			all_stats_by_type.kill.weapon[w][p] = Math.round((all_stats_by_type.kill.weapon[w][p] / all_stats_by_type.kill.number[p])*10000)/100;
 			all_stats_by_type.death.weapon[w][p] = Math.round((all_stats_by_type.death.weapon[w][p] / all_stats_by_type.death.number[p])*10000)/100;
 		});
+	}
+
+	for (let p = 0; p < all_players.length; p++) {
+		if (all_stats_by_type.game.victory[p] && all_stats_by_type.game.defeat[p])
+			all_stats_by_type.game.victory[p] = Math.round((all_stats_by_type.game.victory[p] / all_stats_by_type.game.defeat[p])*10000)/100;
 	}
 
 	for (let p = 0; p < all_players.length; p++) {
@@ -188,7 +198,11 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Time spent (in minutes)', stats: [0], barmode: 'group', yaxis_type: 'none',
+			elem: 'plot7', title: 'Victory/defeat ratio', stats: [0], yaxis_type: 'none',
+			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.victory, name: capitalize(game_win[0]), type: 'bar' }),
+		},
+		{
+			elem: 'plot9', title: 'Time spent (in minutes)', stats: [0], barmode: 'group', yaxis_type: 'none',
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
 		},
 	];
@@ -201,7 +215,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 
