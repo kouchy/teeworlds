@@ -19,9 +19,10 @@ import datetime
 # =============================================================================
 # =============================================================== GLOBAL VALUES
 
-current_stats = {}
-players_in_game = {}
-outFile = ""
+current_stats     = {}
+current_map       = ""
+players_in_game   = {}
+outFile           = ""
 deletedPlayerName = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
 
 # =============================================================== GLOBAL VALUES
@@ -51,7 +52,7 @@ def printHelp():
 	print("    * stdin  : This action parses in real time the server's log. Use a piped '|' command.                                      ");
 	print("               In this mode, the parser will create a daily file with a header given in the '--out' argument                   ");
 	print("                 $ ./teeworlds_server | python3 parser_teeworld_server.py --act stdin --out stats                              ");
-	print("               Then a stats JSON file will be created everyday with such a name 'stats_20180718.json'                          ");
+	print("               Then a stats JSON file will be created everyday with such a name 'stats_20180718_mapname.json'                  ");
 	print("               Output stats file are updated every 0.5 s if anything happens on the server log. So sometimes the JSON          ");
 	print("               file may not appear updated even if player actions are took into account. Just do another action after          ");
 	print("               this half second.                                                                                               ");
@@ -105,7 +106,7 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None}
-		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'win': 0, 'lost': 0}
+		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'victory': 0, 'defeat': 0}
 
 
 def getWeaponName(weapon):
@@ -179,192 +180,232 @@ def countNumPlayersInGame():
 	return count
 
 
-def parseLogLine(logline, stats, countGameTime=True, outFile=""):
+def pasreLogLineGame(message, stats):
+
+	logType = message.split(" ",1)
+
+	if logType[0] == "kill": # kill killer='1:Bigdaddy' victim='0:Badmom' weapon=1 special=0
+
+		killerPosStart = logType[1].find(":") +1
+		killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
+		killerName     = logType[1][killerPosStart:killerPosEnd]
+
+
+		victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
+		victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
+		victimName     = logType[1][victimPosStart:victimPosEnd]
+
+		weaponPosStart = victimPosEnd + 9
+		weaponPosEnd   = logType[1].find(" ",weaponPosStart+1)
+		weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
+
+		if weaponName == 'server': # killed by the server or team change so ignore it
+			return False
+
+		specialPosStart = weaponPosEnd + 9
+		specialName     = logType[1][specialPosStart]
+
+
+		initPlayer(killerName, stats)
+		initPlayer(victimName, stats)
+
+		if killerName == victimName: # then a suicide
+			stats[killerName]['suicide']['number'] += 1
+			stats[killerName]['suicide']['weapon'][weaponName] += 1
+
+			if specialName == "3":
+				stats[killerName]['suicide']['with_flag'] += 1
+		else:
+			stats[killerName]['kill']['number'] += 1
+			stats[killerName]['kill']['weapon'][weaponName] += 1
+
+			try:
+				stats[killerName]['kill']['player'][victimName] += 1
+			except KeyError:
+				stats[killerName]['kill']['player'][victimName] = 1
+
+
+			stats[victimName]['death']['number'] += 1
+			stats[victimName]['death']['weapon'][weaponName] += 1
+
+			try:
+				stats[victimName]['death']['player'][killerName] += 1
+			except KeyError:
+				stats[victimName]['death']['player'][killerName] = 1
+
+			if specialName == "3": # the killer and the victim had the flag
+				stats[victimName]['death']['with_flag'] += 1
+				stats[killerName]['kill' ]['flag_defense'] += 1
+				stats[killerName]['kill' ]['flag_attack'] += 1
+
+			elif specialName == "2": # the killer had the flag
+				stats[killerName]['kill' ]['flag_defense'] += 1
+
+			elif specialName == "1": # the victim had the flag
+				stats[killerName]['kill' ]['flag_attack'] += 1
+				stats[victimName]['death']['with_flag'] += 1
+
+
+	elif logType[0] == "pickup": # pickup player='0:Badmom' item=1/0
+
+		playerPosStart = logType[1].find(":") +1
+		playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
+		playerName     = logType[1][playerPosStart:playerPosEnd]
+
+		initPlayer(playerName, stats)
+
+		itemName = getItemName(logType[1][playerPosEnd + 7])
+
+		if itemName == 'weapon':
+			weaponName = getWeaponName(logType[1][playerPosEnd + 9])
+			stats[playerName]['item'][weaponName] += 1
+		else:
+			stats[playerName]['item'][itemName] += 1
+
+
+	elif logType[0].find("flag") == 0: # flag_grab player='0:Badmom'
+		if len(logType) == 1: # == "flag_return" -> flag returned automatically
+			return False
+
+		playerPosStart = logType[1].find(":") +1
+		playerPosEnd   = logType[1].find("\'\n",playerPosStart+1)
+		playerName     = logType[1][playerPosStart:playerPosEnd]
+
+		initPlayer(playerName, stats)
+
+		if logType[0] == "flag_grab":
+			stats[playerName]['flag']['grab'] += 1
+		elif logType[0] == "flag_capture":
+			stats[playerName]['flag']['capture'] += 1
+		elif logType[0]== "flag_return":
+			stats[playerName]['flag']['return'] += 1
+
+	elif logType[0] == "victory": # victory blue team
+		teamPosStart = 0
+		teamPosEnd   = logType[1].find(" team", teamPosStart+1)
+		teamName     = logType[1][teamPosStart:teamPosEnd]
+
+		for playerName in stats.keys():
+			if stats[playerName]['game']['team'] == teamName: # it's a victory !
+				stats[playerName]['game']['victory'] += 1
+			elif stats[playerName]['game']['team'] != "": # it's a defeat
+				stats[playerName]['game']['defeat'] += 1
+			#else : not in game
+
+		return True # dump to update victory status
+
+	return False
+
+
+def pasreLogLineChat(message, stats, countGameTime=True):
+
+	if message.find("flag was captured") != -1: # [5b4622aa][chat]: *** The red flag was captured by 'Badmom' (9.56 seconds)
+
+		playerPosStart = message.find("\'") +1
+		playerPosEnd   = message.find("\' (", playerPosStart+1)
+		playerName     = message[playerPosStart:playerPosEnd]
+
+		timePosStart = message.find("(", playerPosEnd+1) +1
+		if timePosStart == 0:
+			return False;
+
+		timePosEnd = message.find(" seconds)", timePosStart+1)
+		flagTime   = message[timePosStart:timePosEnd]
+
+		initPlayer(playerName, stats)
+
+		flagTime = float(flagTime)
+
+		if stats[playerName]['flag']['min_time'] == 0.:
+			stats[playerName]['flag']['min_time'] = flagTime
+		else:
+			m = min(stats[playerName]['flag']['min_time'], flagTime)
+			stats[playerName]['flag']['min_time'] = m
+
+		return True # dump to update flag racing value
+
+
+	elif message.find("joined the ") != -1: # [5b4621d5][chat]: *** 'Badmom' joined the blue team
+		playerPosStart = message.find("\'") +1
+		playerPosEnd   = message.find("\' ", playerPosStart+1)
+		playerName     = message[playerPosStart:playerPosEnd]
+
+		initPlayer(playerName, stats)
+
+		if countGameTime:
+			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+
+		teamName = ""
+
+		if message.find("spectators", playerPosEnd+1) != -1: # [5b4627ba][chat]: *** 'Badmom' joined the spectators
+			teamName = "spectators"
+
+		elif message.find("team", playerPosEnd+1) != -1: # [5b4621d5][chat]: *** 'Badmom' entered and joined the blue team
+			playerEnterTime(playerName)
+
+			teamPosStart = message.find("joined the ", playerPosStart+1) + 11
+			teamPosEnd   = message.find(" team", teamPosStart+1)
+			teamName     = message[teamPosStart:teamPosEnd]
+
+		elif message.find("game", playerPosEnd+1) != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the game
+			playerEnterTime(playerName)
+			teamName = "online"
+
+		else:
+			teamName = "online"
+
+		stats[playerName]['game']['team'] = teamName
+
+		return True # dump to update player status
+
+
+	elif message.find("has left the game") != -1: # [5b461feb][chat]: *** 'Badmom' has left the game
+		playerPosStart = message.find("\'") +1
+		playerPosEnd   = message.find("\' has", playerPosStart+1)
+		playerName     = message[playerPosStart:playerPosEnd]
+
+		initPlayer(playerName, stats)
+
+		if countGameTime:
+			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+
+		stats[playerName]['game']['team'] = ""
+
+		return True # dump the stats to prevent the case where the last player left then the server returns nothing else
+
+	return False
+
+
+def pasreLogLineDatafile(message, stats):
+
+	if message.find("loading done. datafile=") != -1: # [5b4f6996][datafile]: loading done. datafile='maps/log1.map'
+
+		mapPosStart = message.find("/") +1
+		mapPosEnd   = message.find(".map\'", mapPosStart+1)
+		mapName     = message[mapPosStart:mapPosEnd]
+
+		global current_map
+		current_map = mapName
+
+		return True # force file dump
+
+	return False
+
+
+def parseLogLine(logline, stats, countGameTime=True):
 
 	logTitle = logline.split(": ",1)
 
 	if logTitle[0].find("game") != -1 and countNumPlayersInGame() > 1:
-
-		logType = logTitle[1].split(" ",1)
-
-		if logType[0] == "kill":
-
-			killerPosStart = logType[1].find(":") +1
-			killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
-			killerName     = logType[1][killerPosStart:killerPosEnd]
-
-
-			victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
-			victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
-			victimName     = logType[1][victimPosStart:victimPosEnd]
-
-			weaponPosStart = victimPosEnd + 9
-			weaponPosEnd   = logType[1].find(" ",weaponPosStart+1)
-			weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
-
-			if weaponName == 'server': # killed by the server or team change so ignore it
-				return
-
-			specialPosStart = weaponPosEnd + 9
-			specialName     = logType[1][specialPosStart]
-
-
-			initPlayer(killerName, stats)
-			initPlayer(victimName, stats)
-
-			if killerName == victimName: # then a suicide
-				stats[killerName]['suicide']['number'] += 1
-				stats[killerName]['suicide']['weapon'][weaponName] += 1
-
-				if specialName == "3":
-					stats[killerName]['suicide']['with_flag'] += 1
-			else:
-				stats[killerName]['kill']['number'] += 1
-				stats[killerName]['kill']['weapon'][weaponName] += 1
-
-				try:
-					stats[killerName]['kill']['player'][victimName] += 1
-				except KeyError:
-					stats[killerName]['kill']['player'][victimName] = 1
-
-
-				stats[victimName]['death']['number'] += 1
-				stats[victimName]['death']['weapon'][weaponName] += 1
-
-				try:
-					stats[victimName]['death']['player'][killerName] += 1
-				except KeyError:
-					stats[victimName]['death']['player'][killerName] = 1
-
-				if specialName == "3": # the killer and the victim had the flag
-					stats[victimName]['death']['with_flag'] += 1
-					stats[killerName]['kill' ]['flag_defense'] += 1
-					stats[killerName]['kill' ]['flag_attack'] += 1
-
-				elif specialName == "2": # the killer had the flag
-					stats[killerName]['kill' ]['flag_defense'] += 1
-
-				elif specialName == "1": # the victim had the flag
-					stats[killerName]['kill' ]['flag_attack'] += 1
-					stats[victimName]['death']['with_flag'] += 1
-
-			return
-
-		elif logType[0] == "pickup":
-
-			playerPosStart = logType[1].find(":") +1
-			playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
-			playerName     = logType[1][playerPosStart:playerPosEnd]
-
-			initPlayer(playerName, stats)
-
-			itemName = getItemName(logType[1][playerPosEnd + 7])
-
-			if itemName == 'weapon':
-				weaponName = getWeaponName(logType[1][playerPosEnd + 9])
-				stats[playerName]['item'][weaponName] += 1
-			else:
-				stats[playerName]['item'][itemName] += 1
-
-			return
-
-		elif logType[0].find("flag") == 0:
-			if len(logType) == 1: # == "flag_return\n" -> flag returned automatically
-				return
-
-			playerPosStart = logType[1].find(":") +1
-			playerPosEnd   = logType[1].find("\'\n",playerPosStart+1)
-			playerName     = logType[1][playerPosStart:playerPosEnd]
-
-			initPlayer(playerName, stats)
-
-			if logType[0] == "flag_grab":
-				stats[playerName]['flag']['grab'] += 1
-			elif logType[0] == "flag_capture":
-				stats[playerName]['flag']['capture'] += 1
-			elif logType[0]== "flag_return":
-				stats[playerName]['flag']['return'] += 1
-
-			return
+		return pasreLogLineGame(logTitle[1], stats)
 
 	elif logTitle[0].find("chat") != -1:
+		return pasreLogLineChat(logTitle[1], stats, countGameTime)
 
-		message = logTitle[1]
+	elif logTitle[0].find("datafile") != -1:
+		return pasreLogLineDatafile(logTitle[1], stats)
 
-		if message.find("flag was captured") != -1: # [5b4622aa][chat]: *** The red flag was captured by 'Badmom' (9.56 seconds)
-
-			playerPosStart = message.find("\'") +1
-			playerPosEnd   = message.find("\' (", playerPosStart+1)
-			playerName     = message[playerPosStart:playerPosEnd]
-
-			timePosStart = message.find("(", playerPosEnd+1) +1
-			if timePosStart == 0:
-				return;
-
-			timePosEnd = message.find(" seconds)", timePosStart+1)
-			flagTime   = message[timePosStart:timePosEnd]
-
-			initPlayer(playerName, stats)
-
-			flagTime = float(flagTime)
-
-			if stats[playerName]['flag']['min_time'] == 0.:
-				stats[playerName]['flag']['min_time'] = flagTime
-			else:
-				m = min(stats[playerName]['flag']['min_time'], flagTime)
-				stats[playerName]['flag']['min_time'] = m
-
-			return;
-
-		elif message.find("joined the ") != -1: # [5b4621d5][chat]: *** 'Badmom' joined the blue team
-			playerPosStart = message.find("\'") +1
-			playerPosEnd   = message.find("\' ", playerPosStart+1)
-			playerName     = message[playerPosStart:playerPosEnd]
-
-			initPlayer(playerName, stats)
-
-			if countGameTime:
-				stats[playerName]['game']['time'] += playerLeaveTime(playerName)
-
-			teamName = ""
-
-			if message.find("spectators", playerPosEnd+1) != -1: # [5b4627ba][chat]: *** 'Badmom' joined the spectators
-				teamName = "spectators"
-
-			elif message.find("team", playerPosEnd+1) != -1: # [5b4621d5][chat]: *** 'Badmom' entered and joined the blue team
-				playerEnterTime(playerName)
-
-				teamPosStart = message.find("joined the ", playerPosStart+1) + 11
-				teamPosEnd   = message.find(" team", teamPosStart+1)
-				teamName     = message[teamPosStart:teamPosEnd]
-
-			elif message.find("game", playerPosEnd+1) != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the game
-				playerEnterTime(playerName)
-				teamName = "online"
-
-			else:
-				teamName = "online"
-
-
-			stats[playerName]['game']['team'] = teamName
-
-			return
-
-		elif message.find("has left the game") != -1: # [5b461feb][chat]: *** 'Badmom' has left the game
-			playerPosStart = message.find("\'") +1
-			playerPosEnd   = message.find("\' has", playerPosStart+1)
-			playerName     = message[playerPosStart:playerPosEnd]
-
-			initPlayer(playerName, stats)
-
-			if countGameTime:
-				stats[playerName]['game']['time'] += playerLeaveTime(playerName)
-
-			stats[playerName]['game']['team'] = ""
-
-			dumpStats(stats) # dump the stats to prevent the case where the last player left then the server returns nothing else
-
-			return
+	return False
 
 
 def recursiveMerge(oldDict, newDict):
@@ -510,8 +551,22 @@ def signal_handler(sig, frame):
 	sys.exit(0)
 
 
-def getOutFileName(header, date):
-	return header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day) + ".json"
+def getOutFileName(header):
+
+	date = datetime.date.today()
+	file = header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day)
+
+	if current_map != "":
+		file += "_" + current_map
+
+	file += ".json"
+
+	global outFile
+
+	diff = outFile != file
+	outFile = file
+
+	return diff
 
 # =================================================================== FUNCTIONS
 # =============================================================================
@@ -546,21 +601,12 @@ def run(args):
 	create_dayly_file = args.old is None;
 
 
+
 	if args.action == "stdin":
 		dump_time = time.time()
 
 		if create_dayly_file:
-			current_date = datetime.date.today()
-			outFile = getOutFileName(args.out, current_date)
-
-			try :
-				with open(outFile) as oldStatsFile:
-					current_stats = json.load(oldStatsFile)
-
-				print("parser: load today stats: " + outFile)
-
-			except IOError:
-				print("parser: new output filename: " + outFile)
+			outFile = ""
 
 
 		# read standard input
@@ -568,17 +614,24 @@ def run(args):
 			if args.echo:
 				print("server: " + log)
 
-			parseLogLine(log, current_stats, True, args.out)
+			forceDump = parseLogLine(log, current_stats, True)
 
-			if (dump_time + 0.5) < time.time():
-				if create_dayly_file and current_date != datetime.date.today(): # the day changed
-					dumpStats(current_stats) # save correctly the old stats before changing of file name
-					current_date = datetime.date.today()
-					outFile = getOutFileName(args.out, current_date)
-					print("parser: new output filename: " + outFile)
-					current_stats = {}
+			if forceDump or (dump_time + 0.5) < time.time():
+				if outFile != "":
+					dumpStats(current_stats) # save correctly the old stats before any filename change
 
-				dumpStats(current_stats)
+				if getOutFileName(args.out):
+					# outFile changed
+					try :
+						with open(outFile) as oldStatsFile:
+							current_stats = json.load(oldStatsFile)
+
+						print("parser: load today stats: " + outFile)
+
+					except IOError:
+						print("parser: new output filename: " + outFile)
+						current_stats = {}
+
 				dump_time = time.time()
 
 
@@ -586,7 +639,7 @@ def run(args):
 		# read server log file
 		with open(args.new) as logFile:
 			for log in logFile:
-				parseLogLine(log, current_stats, False, "")
+				parseLogLine(log, current_stats, False)
 
 
 	elif args.action == "json":
