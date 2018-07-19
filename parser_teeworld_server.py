@@ -210,14 +210,33 @@ def pasreLogLineGame(message, stats):
 		initPlayer(victimName, stats)
 
 		if killerName == victimName: # then a suicide
-			stats[killerName]['suicide']['number'] += 1
-			stats[killerName]['suicide']['weapon'][weaponName] += 1
+
+			try:
+				stats[killerName]['suicide']['number'] += 1
+			except KeyError:
+				stats[killerName]['suicide']['number'] = 1
+
+			try:
+				stats[killerName]['suicide']['weapon'][weaponName] += 1
+			except KeyError:
+				stats[killerName]['suicide']['weapon'][weaponName] = 1
 
 			if specialName == "3":
-				stats[killerName]['suicide']['with_flag'] += 1
+				try:
+					stats[killerName]['suicide']['with_flag'] += 1
+				except KeyError:
+					stats[killerName]['suicide']['with_flag'] = 1
+
 		else:
-			stats[killerName]['kill']['number'] += 1
-			stats[killerName]['kill']['weapon'][weaponName] += 1
+			try:
+				stats[killerName]['kill']['number'] += 1
+			except KeyError:
+				stats[killerName]['kill']['number'] = 1
+
+			try:
+				stats[killerName]['kill']['weapon'][weaponName] += 1
+			except KeyError:
+				stats[killerName]['kill']['weapon'][weaponName] = 1
 
 			try:
 				stats[killerName]['kill']['player'][victimName] += 1
@@ -225,25 +244,54 @@ def pasreLogLineGame(message, stats):
 				stats[killerName]['kill']['player'][victimName] = 1
 
 
-			stats[victimName]['death']['number'] += 1
-			stats[victimName]['death']['weapon'][weaponName] += 1
+			try:
+				stats[victimName]['death']['number'] += 1
+			except KeyError:
+				stats[victimName]['death']['number'] = 1
+
+			try:
+				stats[victimName]['death']['weapon'][weaponName] += 1
+			except KeyError:
+				stats[victimName]['death']['weapon'][weaponName] = 1
 
 			try:
 				stats[victimName]['death']['player'][killerName] += 1
 			except KeyError:
 				stats[victimName]['death']['player'][killerName] = 1
 
+
 			if specialName == "3": # the killer and the victim had the flag
-				stats[victimName]['death']['with_flag'] += 1
-				stats[killerName]['kill' ]['flag_defense'] += 1
-				stats[killerName]['kill' ]['flag_attack'] += 1
+				try:
+					stats[victimName]['death']['with_flag'] += 1
+				except KeyError:
+					stats[victimName]['death']['with_flag'] = 1
+
+				try:
+					stats[killerName]['kill']['flag_defense'] += 1
+				except KeyError:
+					stats[killerName]['kill']['flag_defense'] = 1
+
+				try:
+					stats[killerName]['kill']['flag_attack'] += 1
+				except KeyError:
+					stats[killerName]['kill']['flag_attack'] = 1
 
 			elif specialName == "2": # the killer had the flag
-				stats[killerName]['kill' ]['flag_defense'] += 1
+				try:
+					stats[killerName]['kill']['flag_defense'] += 1
+				except KeyError:
+					stats[killerName]['kill']['flag_defense'] = 1
 
 			elif specialName == "1": # the victim had the flag
-				stats[killerName]['kill' ]['flag_attack'] += 1
-				stats[victimName]['death']['with_flag'] += 1
+				try:
+					stats[killerName]['kill']['flag_attack'] += 1
+				except KeyError:
+					stats[killerName]['kill']['flag_attack'] = 1
+
+				try:
+					stats[victimName]['death']['with_flag'] += 1
+				except KeyError:
+					stats[victimName]['death']['with_flag'] = 1
 
 
 	elif logType[0] == "pickup": # pickup player='0:Badmom' item=1/0
@@ -257,10 +305,12 @@ def pasreLogLineGame(message, stats):
 		itemName = getItemName(logType[1][playerPosEnd + 7])
 
 		if itemName == 'weapon':
-			weaponName = getWeaponName(logType[1][playerPosEnd + 9])
-			stats[playerName]['item'][weaponName] += 1
-		else:
+			itemName = getWeaponName(logType[1][playerPosEnd + 9])
+
+		try:
 			stats[playerName]['item'][itemName] += 1
+		except KeyError:
+			stats[playerName]['item'][itemName] = 1
 
 
 	elif logType[0].find("flag") == 0: # flag_grab player='0:Badmom'
@@ -273,24 +323,40 @@ def pasreLogLineGame(message, stats):
 
 		initPlayer(playerName, stats)
 
+		action = ""
+
 		if logType[0] == "flag_grab":
-			stats[playerName]['flag']['grab'] += 1
+			action = 'grab'
 		elif logType[0] == "flag_capture":
-			stats[playerName]['flag']['capture'] += 1
+			action = 'capture'
 		elif logType[0]== "flag_return":
-			stats[playerName]['flag']['return'] += 1
+			action = 'return'
+
+		try:
+			stats[playerName]['flag'][action] += 1
+		except KeyError:
+			stats[playerName]['flag'][action] = 1
+
 
 	elif logType[0] == "victory": # victory blue team
 		teamPosStart = 0
 		teamPosEnd   = logType[1].find(" team", teamPosStart+1)
 		teamName     = logType[1][teamPosStart:teamPosEnd]
 
+		state = ""
+
 		for playerName in stats.keys():
 			if stats[playerName]['game']['team'] == teamName: # it's a victory !
-				stats[playerName]['game']['victory'] += 1
+				state = 'victory'
 			elif stats[playerName]['game']['team'] != "": # it's a defeat
-				stats[playerName]['game']['defeat'] += 1
-			#else : not in game
+				state = 'defeat'
+			else : #not in game
+				continue
+
+			try:
+				stats[playerName]['game'][state] += 1
+			except KeyError:
+				stats[playerName]['game'][state] = 1
 
 		return True # dump to update victory status
 
@@ -333,7 +399,11 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		initPlayer(playerName, stats)
 
 		if countGameTime:
-			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+			playerTime = playerLeaveTime(playerName)
+			try:
+				stats[playerName]['game']['time'] += playerTime
+			except KeyError:
+				stats[playerName]['game']['time'] = playerTime
 
 		teamName = ""
 
@@ -367,7 +437,11 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		initPlayer(playerName, stats)
 
 		if countGameTime:
-			stats[playerName]['game']['time'] += playerLeaveTime(playerName)
+			playerTime = playerLeaveTime(playerName)
+			try:
+				stats[playerName]['game']['time'] += playerTime
+			except KeyError:
+				stats[playerName]['game']['time'] = playerTime
 
 		stats[playerName]['game']['team'] = ""
 
