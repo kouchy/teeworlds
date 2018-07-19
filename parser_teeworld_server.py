@@ -29,8 +29,8 @@ deletedPlayerName = "__deletedplayer__" # this name is too long for a teeworlds
 # =============================================================================
 
 
-# =============================================================================
-# =================================================================== FUNCTIONS
+# ==============================================================================
+# =============================================================== MAIN FUNCTIONS
 def parseArguments():
 
 	parser = argparse.ArgumentParser(prog='parser_teeworld_server', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -103,12 +103,88 @@ def initPlayer(playerKey, stats):
 		stats[playerKey]['suicide'] = {'number' : 0, 'weapon' : {'world': 0, 'grenade': 0}, 'with_flag': 0}
 		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
 		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'with_flag': 0}
+		stats[playerKey]['damage' ] = {'take' : {'armor': 0, 'health': 0}, 'give' : {'armor': 0, 'health': 0}, 'itself' : {'armor': 0, 'health': 0}}
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
-		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None}
+		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None, 'damage': None}
 		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'victory': 0, 'defeat': 0}
 
 
+def computeRatios(stats):
+	for playerName in stats.keys():
+		total_death = 0
+		try:
+			total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
+		except KeyError:
+			pass
+
+		if total_death != 0:
+			stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
+		else:
+			stats[playerName]['ratio']['kill'] = None
+
+
+		total_grab = 0
+		try:
+			total_grab = stats[playerName]['flag']['grab']
+		except KeyError:
+			pass
+
+		if total_grab != 0:
+			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / total_grab
+		else:
+			stats[playerName]['ratio']['flag'] = None
+
+
+		total_took_damage = 0
+		total_give_damage = 0
+		try:
+			total_took_damage = (stats[playerName]['take']['armor'] + stats[playerName]['take']['health'] + stats[playerName]['itself']['armor'] + stats[playerName]['itself']['health'])
+			total_give_damage = (stats[playerName]['give']['armor'] + stats[playerName]['give']['health'])
+		except KeyError:
+			pass
+
+		if total_took_damage != 0:
+			stats[playerName]['ratio']['damage'] = total_give_damage * 1.0 / total_took_damage
+		else:
+			stats[playerName]['ratio']['damage'] = None
+
+
+def dumpStats(stats):
+	computeRatios(stats)
+
+	with open(outFile, 'w') as outStatsFile:
+	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
+
+
+def signal_handler(sig, frame):
+	dumpStats(current_stats)
+	sys.exit(0)
+
+
+def getOutFileName(header):
+
+	date = datetime.date.today()
+	file = header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day)
+
+	if current_map != "":
+		file += "_" + current_map
+
+	file += ".json"
+
+	global outFile
+
+	diff = outFile != file
+	outFile = file
+
+	return diff
+
+# =============================================================== MAIN FUNCTIONS
+# ==============================================================================
+
+
+# ==============================================================================
+# ========================================================== LOG PARSE FUNCTIONS
 def getWeaponName(weapon):
 	if weapon == "-1":
 		return 'world'
@@ -189,7 +265,6 @@ def pasreLogLineGame(message, stats):
 		killerPosStart = logType[1].find(":") +1
 		killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
 		killerName     = logType[1][killerPosStart:killerPosEnd]
-
 
 		victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
 		victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
@@ -360,6 +435,73 @@ def pasreLogLineGame(message, stats):
 
 		return True # dump to update victory status
 
+
+	elif  logType[0] == "damage": # damage killer='1:Badmom' victim='0:Kouchy' weapon=1 health=2 armor=0
+
+		killerPosStart = logType[1].find(":") +1
+		killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
+		killerName     = logType[1][killerPosStart:killerPosEnd]
+
+		victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
+		victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
+		victimName     = logType[1][victimPosStart:victimPosEnd]
+
+		weaponPosStart = victimPosEnd + 9
+		weaponPosEnd   = logType[1].find(" ",weaponPosStart+1)
+		weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
+
+		if weaponName == 'server': # killed by the server or team change so ignore it
+			return False
+
+		healthPosStart = weaponPosEnd + 8
+		healthPosEnd   = logType[1].find(" ", healthPosStart+1)
+		healthName     = getWeaponName(logType[1][healthPosStart:healthPosEnd])
+		health = int(healthName)
+
+		armorPosStart = healthPosEnd + 7
+		armorName     = getWeaponName(logType[1][armorPosStart:])
+		armor = int(armorName)
+
+
+		initPlayer(killerName, stats)
+		initPlayer(victimName, stats)
+
+
+		if killerName == victimName: # then damage to itself
+
+			try:
+				stats[killerName]['damage']['itself']['armor'] += armor
+			except KeyError:
+				stats[killerName]['damage']['itself']['armor'] = armor
+
+			try:
+				stats[killerName]['damage']['itself']['health'] += health
+			except KeyError:
+				stats[killerName]['damage']['itself']['health'] = health
+
+		else:
+
+			try:
+				stats[killerName]['damage']['give']['armor'] += armor
+			except KeyError:
+				stats[killerName]['damage']['give']['armor'] = armor
+
+			try:
+				stats[killerName]['damage']['give']['health'] += health
+			except KeyError:
+				stats[killerName]['damage']['give']['health'] = health
+
+
+			try:
+				stats[victimName]['damage']['take']['armor'] += armor
+			except KeyError:
+				stats[victimName]['damage']['take']['armor'] = armor
+
+			try:
+				stats[victimName]['damage']['take']['health'] += health
+			except KeyError:
+				stats[victimName]['damage']['take']['health'] = health
+
 	return False
 
 
@@ -481,7 +623,12 @@ def parseLogLine(logline, stats, countGameTime=True):
 
 	return False
 
+# ========================================================== LOG PARSE FUNCTIONS
+# ==============================================================================
 
+
+# ==============================================================================
+# ======================================================= RENAME/MERGE FUNCTIONS
 def recursiveMerge(oldDict, newDict):
 	for k, v in newDict.items():
 		if isinstance(v, dict):
@@ -598,52 +745,9 @@ def renamePlayer(stats, oldName, newName):
 			stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
 			del stats[playerName]['death']['player'][oldName]
 
+# ======================================================= RENAME/MERGE FUNCTIONS
+# ==============================================================================
 
-def computeRatios(stats):
-	for playerName in stats.keys():
-		total_death = (stats[playerName]['death']['number'] + stats[playerName]['suicide']['number'])
-		if total_death != 0:
-			stats[playerName]['ratio']['kill'] = stats[playerName]['kill']['number' ] * 1.0 / total_death
-		else:
-			stats[playerName]['ratio']['kill'] = None
-
-		if stats[playerName]['flag']['grab'] != 0:
-			stats[playerName]['ratio']['flag'] = stats[playerName]['flag']['capture'] * 1.0 / stats[playerName]['flag']['grab']
-		else:
-			stats[playerName]['ratio']['flag'] = None
-
-
-def dumpStats(stats):
-	computeRatios(stats)
-
-	with open(outFile, 'w') as outStatsFile:
-	    json.dump(stats, outStatsFile, indent=4, sort_keys=True)
-
-
-def signal_handler(sig, frame):
-	dumpStats(current_stats)
-	sys.exit(0)
-
-
-def getOutFileName(header):
-
-	date = datetime.date.today()
-	file = header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day)
-
-	if current_map != "":
-		file += "_" + current_map
-
-	file += ".json"
-
-	global outFile
-
-	diff = outFile != file
-	outFile = file
-
-	return diff
-
-# =================================================================== FUNCTIONS
-# =============================================================================
 
 def run(args):
 
@@ -737,7 +841,6 @@ def run(args):
 		raise ValueError('args.action is unknown.')
 
 	dumpStats(current_stats)
-
 
 
 if __name__ == '__main__':
