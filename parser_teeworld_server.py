@@ -176,28 +176,28 @@ def initPlayer(playerKey, stats):
 	if not playerKey in stats.keys():
 		stats[playerKey] = {}
 
-	if not 'suicide' int stats[playerKey]:
+	if not 'suicide' in stats[playerKey]:
 		stats[playerKey]['suicide'] = {'number' : 0, 'weapon' : {'world': 0, 'grenade': 0}, 'with_flag': 0}
 
-	if not 'kill' int stats[playerKey]:
+	if not 'kill' in stats[playerKey]:
 		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
 
-	if not 'damage' int stats[playerKey]:
+	if not 'damage' in stats[playerKey]:
 		stats[playerKey]['damage' ] = {'take' : {'armor': 0, 'health': 0}, 'give' : {'armor': 0, 'health': 0}, 'itself' : {'armor': 0, 'health': 0}}
 
-	if not 'item' int stats[playerKey]:
+	if not 'item' in stats[playerKey]:
 		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 
-	if not 'flag' int stats[playerKey]:
+	if not 'flag' in stats[playerKey]:
 		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
 
-	if not 'ratio' int stats[playerKey]:
+	if not 'ratio' in stats[playerKey]:
 		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None, 'damage': None}
 
-	if not 'game' int stats[playerKey]:
+	if not 'game' in stats[playerKey]:
 		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'victory': 0, 'defeat': 0}
 
-	if not 'death' int stats[playerKey]:
+	if not 'death' in stats[playerKey]:
 		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'with_flag': 0}
 
 
