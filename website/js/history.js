@@ -55,9 +55,9 @@ $(document).ready(function() {
 	let month = currentTime.getMonth() +1;
 	let day = currentTime.getDate();
 	let year = currentTime.getFullYear();
-	let filename = "stats_" + year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day;
-	draw_online_players(root_dir + "/" + stats_type + "/" + filename, true);
-	setInterval(function() { draw_online_players(root_dir + "/" + stats_type + "/" + filename, false); }, 5000);
+	let filename = "stats_" + year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day + "_" + g_map + ".json";
+	draw_online_players(g_root_dir + "/" + "daily" + "/" + filename, true);
+	setInterval(function() { draw_online_players(g_root_dir + "/" + "daily" + "/" + filename, false); }, 5000);
 
 	let path = findGetParameter("file");
 	if (path != undefined)
@@ -87,7 +87,7 @@ $(document).ready(function() {
 		}
 	});
 
-	let dir = root_dir + "/daily";
+	let dir = g_root_dir + "/daily";
 	let fileextension = ".json";
 	$.ajax({
 		//This will retrieve the contents of the folder if the folder is configured as 'browsable'
@@ -96,18 +96,21 @@ $(document).ready(function() {
 			// List all json file names in the page
 			$(data).find("a:contains(" + fileextension + ")").each(function () {
 				let filename = this.href.replace(window.location.host, "").replace("http:///", "");
-				let id = filename.replace(/\.[^/.]+$/, "");
-				let date = id.replace(/stats_/g, "");
-				let obj = {
-					year: parseInt(date.slice(0, 4)),
-					month: parseInt(date.slice(4, 6)),
-					day: parseInt(date.slice(6, 8))
-				}
+				if (get_map_from_path(filename) == g_map)
+				{
+					let id = filename.replace(/\.[^/.]+$/, "");
+					let date = id.replace(/stats_/g, "");
+					let obj = {
+						year: parseInt(date.slice(0, 4)),
+						month: parseInt(date.slice(4, 6)),
+						day: parseInt(date.slice(6, 8))
+					}
 
-				$.getJSON(dir+"/"+filename, function(json){
-					if ($.isEmptyObject(json) == false)
-						available_dates.push(new Date(obj.year, obj.month -1, obj.day, 0, 0, 0, 0));
-				});
+					$.getJSON(dir+"/"+filename, function(json){
+						if ($.isEmptyObject(json) == false)
+							available_dates.push(new Date(obj.year, obj.month -1, obj.day, 0, 0, 0, 0));
+					});
+				}
 			});
 	    }
 	});
@@ -146,8 +149,8 @@ $(document).ready(function() {
 					let month = get_month_from_date(new_date);
 					let day = get_day_from_date(new_date);
 					selected_date = new_date;
-					let filename = "stats_" + year+month+day + ".json";
-					render(root_dir + "/" + stats_type + "/" + filename);
+					let filename = "stats_" + year+month+day + "_" + g_map + ".json";
+					render(g_root_dir + "/" + stats_type + "/" + filename);
 				}
 			});
 		}

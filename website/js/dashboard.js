@@ -8,7 +8,9 @@ var items_names = { 'armor': 'Shield' };
 // 'return' is aliased to 'Bring back'
 var flag_stats_names = { 'return': 'Bring back' };
 var player_ratio_names = { 'kill': 'Kill' };
-var root_dir = "stats";
+
+var g_root_dir = "stats";
+var g_map = "csn7"
 
 let capitalize = string => string.charAt(0).toUpperCase() + string.slice(1);
 
@@ -16,15 +18,21 @@ let diff = (a, b) => a.filter(i => b.indexOf(i) < 0);
 
 function get_type_from_path(path)
 {
-	let type = path.replace(/.*\/(.*)\/stats_[0-9]*\.json/g, "$1");
+	let type = path.replace(/.*\/(.*)\/stats_[0-9]*_.*\.json/g, "$1");
 	return type;
 }
 
 function get_date_from_path(path)
 {
-	let date = path.replace(/.*stats_([0-9]*)\.json/g, "$1");
+	let date = path.replace(/.*stats_([0-9]*)_.*\.json/g, "$1");
 	date = date.slice(6, 8) + "/" + date.slice(4, 6) + "/" + date.slice(0, 4);
 	return date;
+}
+
+function get_map_from_path(path)
+{
+	let map = path.replace(/.*stats_[0-9]*_(.*)\.json/g, "$1");
+	return map;
 }
 
 function get_year_from_date(date)
