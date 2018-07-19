@@ -143,15 +143,22 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			y: all_players,
 			z: player_kills,
 			type: 'heatmap',
+			colorscale: [
+				[0, '#ffffff'],
+				[.5, '#ff0000'],
+				[1,   '#000000'],
+			]
 		}
 	];
 	let kill_layout = {
-		title: 'Kill/death heatmap'
+		title: 'Killer/killed heatmap',
+		xaxis: {title: 'killed'},
+		yaxis: {title: 'killer'},
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
 }
 
-function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos)
+function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio)
 {
 	for (let p = 0; p < all_players.length; p++) {
 		weapons.forEach(w => {
@@ -221,6 +228,30 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 	];
 
 	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: plot_data.barmode, title: plot_data.title, autorange: true, yaxis: { type: plot_data.yaxis_type, autorange: true}}));
+
+	let max_kill_ratio = Math.max.apply(null,[].concat.apply([],player_kill_ratio).filter(ratio => !!(ratio/ratio) ));
+	let kill_data = [
+		{
+			x: all_players,
+			y: all_players,
+			z: player_kill_ratio,
+			type: 'heatmap',
+			colorscale: [
+				[0, '#8080ff'],
+				[0.9999/max_kill_ratio, '#80ffff'],
+				[1/max_kill_ratio,       '#808080'],
+				[1.0001/max_kill_ratio, '#ffaaaa'],
+				[0.5,   '#ff0000'],
+				[1,   '#000000'],
+			]
+		}
+	];
+	let kill_layout = {
+		title: 'Killer/killed ratio heatmap',
+		xaxis: {title: 'killed'},
+		yaxis: {title: 'killer'},
+	};
+	Plotly.newPlot('plot8', kill_data, kill_layout);
 }
 
 
@@ -235,6 +266,8 @@ function draw_dashboard(path, update = false)
 	$.getJSON( path, function( data ) {
 		let all_players = Object.keys(data);
 		let all_stats_by_type = get_new_empty_stats();
+
+		// Get player kill matrix
 		let player_kills = [];
 		all_players.forEach(function(pseudo,i){
 			player_kills.push([]);
@@ -246,7 +279,13 @@ function draw_dashboard(path, update = false)
 					i == j ? data[pseudo].suicide.weapon.grenade : data[pseudo].kill.player[pseudo2] ? data[pseudo].kill.player[pseudo2] : 0);
 			})
 		});
-		console.log(player_kills);
+
+		// Get player kill ratio matrix
+		// TODO: handle the few Infinity cases
+		let player_kill_ratio = player_kills.map(function(line){return line.slice();});
+		player_kill_ratio.forEach(function(line,i){
+			line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
+		});
 
 		// Recursively browse the json and accumulate data
 		all_players.forEach(pseudo => reduce_stat(data[pseudo], all_stats_by_type));
@@ -264,7 +303,7 @@ function draw_dashboard(path, update = false)
 
 		let type = get_type_from_path(path);
 		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills);
-		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos);
+		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
 
 		if (!update)
 		{
