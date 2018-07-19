@@ -18,14 +18,21 @@ import datetime
 
 # =============================================================================
 # =============================================================== GLOBAL VALUES
-
 current_stats     = {}
 current_map       = ""
 players_in_game   = {}
 outFile           = ""
-deletedPlayerName = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
-
 # =============================================================== GLOBAL VALUES
+# =============================================================================
+
+
+# =============================================================================
+# =================================================================== CONSTANTS
+deletedPlayerName   = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
+playerOffLineTeam   = ""
+playerOnLineTeam    = "online"
+playerSpectatorTeam = "spectators"
+# =================================================================== CONSTANTS
 # =============================================================================
 
 
@@ -146,11 +153,26 @@ def dumpStats(stats):
 
 
 def signal_handler(sig, frame):
+	clearPlayersTeam(current_stats)
 	dumpStats(current_stats)
 	sys.exit(0)
 
 
-def getOutFileName(header):
+def fileNameChanged(header):
+	return outFile != __getOutFileName__(header)
+
+
+def setOutFileName(header):
+	file = __getOutFileName__(header)
+
+	global outFile
+	diff = outFile != file
+	outFile = file
+
+	return diff
+
+
+def __getOutFileName__(header):
 
 	date = datetime.date.today()
 	file = header + "_" + ('%04d' % date.year) + ('%02d' % date.month) + ('%02d' % date.day)
@@ -160,12 +182,12 @@ def getOutFileName(header):
 
 	file += ".json"
 
-	global outFile
+	return file
 
-	diff = outFile != file
-	outFile = file
 
-	return diff
+def clearPlayersTeam(stats):
+	for playerName in stats.keys():
+		stats[playerName]['game']['team'] = playerOffLineTeam
 
 # =============================================================== MAIN FUNCTIONS
 # ==============================================================================
@@ -567,7 +589,7 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		teamName = ""
 
 		if message.find("spectators", playerPosEnd+1) != -1: # [5b4627ba][chat]: *** 'Badmom' joined the spectators
-			teamName = "spectators"
+			teamName = playerSpectatorTeam
 
 		elif message.find("team", playerPosEnd+1) != -1: # [5b4621d5][chat]: *** 'Badmom' entered and joined the blue team
 			playerEnterTime(playerName)
@@ -578,10 +600,10 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 
 		elif message.find("game", playerPosEnd+1) != -1: # [5b4621c7][chat]: *** 'Badmom' entered and joined the game
 			playerEnterTime(playerName)
-			teamName = "online"
+			teamName = playerOnLineTeam
 
 		else:
-			teamName = "online"
+			teamName = playerOnLineTeam
 
 		stats[playerName]['game']['team'] = teamName
 
@@ -602,7 +624,7 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 			except KeyError:
 				stats[playerName]['game']['time'] = playerTime
 
-		stats[playerName]['game']['team'] = ""
+		stats[playerName]['game']['team'] = playerOffLineTeam
 
 		return True # dump the stats to prevent the case where the last player left then the server returns nothing else
 
@@ -812,10 +834,12 @@ def run(args):
 			forceDump = parseLogLine(log, current_stats, True)
 
 			if forceDump or (dump_time + 0.5) < time.time():
-				if outFile != "":
-					dumpStats(current_stats) # save correctly the old stats before any filename change
 
-				if getOutFileName(args.out):
+				if fileNameChanged(args.out):
+					if outFile != "":
+						clearPlayersTeam(current_stats)
+						dumpStats(current_stats) # save correctly the old stats before any changing of file
+
 					# outFile changed
 					try :
 						with open(outFile) as oldStatsFile:
@@ -826,6 +850,10 @@ def run(args):
 					except IOError:
 						print("parser: new output filename: " + outFile)
 						current_stats = {}
+
+				elif outFile != "":
+					dumpStats(current_stats)
+
 
 				dump_time = time.time()
 
