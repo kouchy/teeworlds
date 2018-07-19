@@ -152,8 +152,8 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 	];
 	let kill_layout = {
 		title: 'Killer/killed heatmap',
-		xaxis: {title: 'killed'},
-		yaxis: {title: 'killer'},
+		xaxis: {title: 'Killer'},
+		yaxis: {title: 'Killed'},
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
 }
@@ -248,8 +248,8 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 	];
 	let kill_layout = {
 		title: 'Killer/killed ratio heatmap',
-		xaxis: {title: 'killed'},
-		yaxis: {title: 'killer'},
+		xaxis: {title: 'Killer'},
+		yaxis: {title: 'Killed'},
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
 }
@@ -274,9 +274,9 @@ function draw_dashboard(path, update = false)
 			all_players.forEach( function(pseudo2,j){
 				player_kills[i].push(
 					// without suicides
-					// i == j ? -1 : data[pseudo].kill.player[pseudo2] ? data[pseudo].kill.player[pseudo2] : 0);
+					// i == j ? -1 : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
 					// with suicides
-					i == j ? data[pseudo].suicide.weapon.grenade : data[pseudo].kill.player[pseudo2] ? data[pseudo].kill.player[pseudo2] : 0);
+					i == j ? data[pseudo].suicide.weapon.grenade : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
 			})
 		});
 
