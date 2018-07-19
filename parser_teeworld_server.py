@@ -843,6 +843,8 @@ def run(args):
 						clearPlayersTeam(current_stats)
 						dumpStats(current_stats) # save correctly the old stats before any changing of file
 
+					setOutFileName(args.out)
+
 					# outFile changed
 					try :
 						with open(outFile) as oldStatsFile:
