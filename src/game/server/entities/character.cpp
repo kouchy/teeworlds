@@ -724,6 +724,9 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 		GameServer()->CreateDamageInd(m_Pos, 0, Dmg);
 	}
 
+	int health_prev = m_Health;
+	int armor_prev = m_Armor;
+
 	if(Dmg)
 	{
 		if(m_Armor)
@@ -748,6 +751,16 @@ bool CCharacter::TakeDamage(vec2 Force, int Dmg, int From, int Weapon)
 
 		m_Health -= Dmg;
 	}
+
+	int health_diff = health_prev - ((m_Health >= 0) ? m_Health : 0);
+	int armor_diff  = armor_prev - ((m_Armor >= 0) ? m_Armor : 0);
+
+	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[From], Weapon);
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "damage killer='%d:%s' victim='%d:%s' weapon=%d health=%d armor=%d special=%d",
+		From, Server()->ClientName(From),
+		m_pPlayer->GetCID(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, health_diff, armor_diff, ModeSpecial);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	m_DamageTakenTick = Server()->Tick();
 
