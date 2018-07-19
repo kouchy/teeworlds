@@ -815,6 +815,9 @@ def run(args):
 		with open(args.old) as oldStatsFile:
 			current_stats = json.load(oldStatsFile)
 
+		clearPlayersTeam(current_stats) # prevent any error with team colors, because server just boot up
+
+
 	create_dayly_file = args.old is None;
 
 
@@ -845,6 +848,7 @@ def run(args):
 						with open(outFile) as oldStatsFile:
 							current_stats = json.load(oldStatsFile)
 
+						clearPlayersTeam(current_stats) # prevent any error with team colors
 						print("parser: load today stats: " + outFile)
 
 					except IOError:
