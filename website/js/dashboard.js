@@ -151,7 +151,7 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		}
 	];
 	let kill_layout = {
-		title: 'Killer/killed heatmap',
+		title: 'Killer/killed by weapons heatmap',
 		xaxis: {title: 'Killer pseudo'},
 		yaxis: {title: 'Killed pseudo'},
 	};
@@ -253,7 +253,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		}
 	];
 	let kill_layout = {
-		title: 'Killer/killed ratio heatmap',
+		title: 'Killer/killed by weapons ratio heatmap',
 		xaxis: {title: 'Killer pseudo'},
 		yaxis: {title: 'Killed pseudo'},
 	};
