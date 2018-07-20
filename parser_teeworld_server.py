@@ -760,49 +760,43 @@ def deletePlayer(stats, oldName):
 	del stats[oldName]
 
 	for playerName in stats.keys():
-		if oldName in stats[playerName]['kill']['player']:
-			try:
-				stats[playerName]['kill']['player'][deletedPlayerName] += stats[playerName]['kill']['player'][oldName]
-			except KeyError:
-				stats[playerName]['kill']['player'][deletedPlayerName] = stats[playerName]['kill']['player'][oldName]
 
-			del stats[playerName]['kill']['player'][oldName]
+		statsKillPlayer = stats[playerName]['kill']['player']
+		if oldName in statsKillPlayer:
+			addDictIfNotExist(statsKillPlayer, deletedPlayerName,  0)
+			statsKillPlayer[deletedPlayerName] += statsKillPlayer[oldName]
 
-
-		if oldName in stats[playerName]['death']['player']:
-			try:
-				stats[playerName]['death']['player'][deletedPlayerName] += stats[playerName]['death']['player'][oldName]
-			except KeyError:
-				stats[playerName]['death']['player'][deletedPlayerName] = stats[playerName]['death']['player'][oldName]
-
-			del stats[playerName]['death']['player'][oldName]
+			del statsKillPlayer[oldName]
 
 
-		try:
-			statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
-			if oldName in statsDamageTakePlayer:
-				addDictIfNotExist(statsDamageTakePlayer, deletedPlayerName, {})
-				addDictIfNotExist(statsDamageTakePlayer[deletedPlayerName], 'armor', 0)
-				addDictIfNotExist(statsDamageTakePlayer[deletedPlayerName], 'health', 0)
-				statsDamageTakePlayer[deletedPlayerName]['armor' ] += statsDamageTakePlayer[oldName]['armor' ]
-				statsDamageTakePlayer[deletedPlayerName]['health'] += statsDamageTakePlayer[oldName]['health']
+		statsDeathPlayer = stats[playerName]['death']['player']
+		if oldName in statsDeathPlayer:
+			addDictIfNotExist(statsDeathPlayer, deletedPlayerName,  0)
+			statsDeathPlayer[deletedPlayerName] += statsDeathPlayer[oldName]
 
-				del statsDamageTakePlayer[oldName]
-		except KeyError:
-			pass
+			del statsDeathPlayer[oldName]
 
-		try:
-			statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
-			if oldName in statsDamageGivePlayer:
-				addDictIfNotExist(statsDamageGivePlayer, deletedPlayerName, {})
-				addDictIfNotExist(statsDamageGivePlayer[deletedPlayerName], 'armor', 0)
-				addDictIfNotExist(statsDamageGivePlayer[deletedPlayerName], 'health', 0)
-				statsDamageGivePlayer[deletedPlayerName]['armor' ] += statsDamageGivePlayer[oldName]['armor' ]
-				statsDamageGivePlayer[deletedPlayerName]['health'] += statsDamageGivePlayer[oldName]['health']
 
-				del statsDamageGivePlayer[oldName]
-		except KeyError:
-			pass
+		statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
+		if oldName in statsDamageTakePlayer:
+			addDictIfNotExist(statsDamageTakePlayer, deletedPlayerName, {})
+			addDictIfNotExist(statsDamageTakePlayer[deletedPlayerName], 'armor',  0)
+			addDictIfNotExist(statsDamageTakePlayer[deletedPlayerName], 'health', 0)
+			statsDamageTakePlayer[deletedPlayerName]['armor' ] += statsDamageTakePlayer[oldName]['armor' ]
+			statsDamageTakePlayer[deletedPlayerName]['health'] += statsDamageTakePlayer[oldName]['health']
+
+			del statsDamageTakePlayer[oldName]
+
+
+		statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
+		if oldName in statsDamageGivePlayer:
+			addDictIfNotExist(statsDamageGivePlayer, deletedPlayerName, {})
+			addDictIfNotExist(statsDamageGivePlayer[deletedPlayerName], 'armor',  0)
+			addDictIfNotExist(statsDamageGivePlayer[deletedPlayerName], 'health', 0)
+			statsDamageGivePlayer[deletedPlayerName]['armor' ] += statsDamageGivePlayer[oldName]['armor' ]
+			statsDamageGivePlayer[deletedPlayerName]['health'] += statsDamageGivePlayer[oldName]['health']
+
+			del statsDamageGivePlayer[oldName]
 
 
 def mergePlayer(stats, oldName, newName):
@@ -831,21 +825,43 @@ def mergePlayer(stats, oldName, newName):
 
 
 	for playerName in stats.keys():
-		if oldName in stats[playerName]['kill']['player']:
-			try:
-				stats[playerName]['kill']['player'][newName] += stats[playerName]['kill']['player'][oldName]
-			except KeyError:
-				stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
 
-			del stats[playerName]['kill']['player'][oldName]
+		statsKillPlayer = stats[playerName]['kill']['player']
+		if oldName in statsKillPlayer:
+			addDictIfNotExist(statsKillPlayer, newName,  0)
+			statsKillPlayer[newName] += statsKillPlayer[oldName]
 
-		if oldName in stats[playerName]['death']['player']:
-			try:
-				stats[playerName]['death']['player'][newName] += stats[playerName]['death']['player'][oldName]
-			except KeyError:
-				stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
+			del statsKillPlayer[oldName]
 
-			del stats[playerName]['death']['player'][oldName]
+
+		statsDeathPlayer = stats[playerName]['death']['player']
+		if oldName in statsDeathPlayer:
+			addDictIfNotExist(statsDeathPlayer, newName,  0)
+			statsDeathPlayer[newName] += statsDeathPlayer[oldName]
+
+			del statsDeathPlayer[oldName]
+
+
+		statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
+		if oldName in statsDamageTakePlayer:
+			addDictIfNotExist(statsDamageTakePlayer, newName, {})
+			addDictIfNotExist(statsDamageTakePlayer[newName], 'armor',  0)
+			addDictIfNotExist(statsDamageTakePlayer[newName], 'health', 0)
+			statsDamageTakePlayer[newName]['armor' ] += statsDamageTakePlayer[oldName]['armor' ]
+			statsDamageTakePlayer[newName]['health'] += statsDamageTakePlayer[oldName]['health']
+
+			del statsDamageTakePlayer[oldName]
+
+
+		statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
+		if oldName in statsDamageGivePlayer:
+			addDictIfNotExist(statsDamageGivePlayer, newName, {})
+			addDictIfNotExist(statsDamageGivePlayer[newName], 'armor',  0)
+			addDictIfNotExist(statsDamageGivePlayer[newName], 'health', 0)
+			statsDamageGivePlayer[newName]['armor' ] += statsDamageGivePlayer[oldName]['armor' ]
+			statsDamageGivePlayer[newName]['health'] += statsDamageGivePlayer[oldName]['health']
+
+			del statsDamageGivePlayer[oldName]
 
 
 def renamePlayer(stats, oldName, newName):
@@ -868,14 +884,40 @@ def renamePlayer(stats, oldName, newName):
 	stats[newName] = stats[oldName]
 	del stats[oldName]
 
-	for playerName in stats.keys():
-		if oldName in stats[playerName]['kill']['player']:
-			stats[playerName]['kill']['player'][newName] = stats[playerName]['kill']['player'][oldName]
-			del stats[playerName]['kill']['player'][oldName]
 
-		if oldName in stats[playerName]['death']['player']:
-			stats[playerName]['death']['player'][newName] = stats[playerName]['death']['player'][oldName]
-			del stats[playerName]['death']['player'][oldName]
+	for playerName in stats.keys():
+
+		statsKillPlayer = stats[playerName]['kill']['player']
+		if oldName in statsKillPlayer:
+			statsKillPlayer[newName] = statsKillPlayer[oldName]
+
+			del statsKillPlayer[oldName]
+
+
+		statsDeathPlayer = stats[playerName]['death']['player']
+		if oldName in statsDeathPlayer:
+			statsDeathPlayer[newName] = statsDeathPlayer[oldName]
+
+			del statsDeathPlayer[oldName]
+
+
+		statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
+		if oldName in statsDamageTakePlayer:
+			addDictIfNotExist(statsDamageTakePlayer, newName, {})
+			statsDamageTakePlayer[newName]['armor' ] = statsDamageTakePlayer[oldName]['armor' ]
+			statsDamageTakePlayer[newName]['health'] = statsDamageTakePlayer[oldName]['health']
+
+			del statsDamageTakePlayer[oldName]
+
+
+		statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
+		if oldName in statsDamageGivePlayer:
+			addDictIfNotExist(statsDamageGivePlayer, newName, {})
+			statsDamageGivePlayer[newName]['armor' ] = statsDamageGivePlayer[oldName]['armor' ]
+			statsDamageGivePlayer[newName]['health'] = statsDamageGivePlayer[oldName]['health']
+
+			del statsDamageGivePlayer[oldName]
+
 
 # ======================================================= RENAME/MERGE FUNCTIONS
 # ==============================================================================
