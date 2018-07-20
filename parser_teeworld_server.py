@@ -677,7 +677,10 @@ def parseLogLine(logline, stats, countGameTime=True):
 def recursiveMerge(oldDict, newDict):
 	for k, v in newDict.items():
 		if isinstance(v, dict):
-			recursiveMerge(oldDict[k], newDict[k])
+			try:
+				recursiveMerge(oldDict[k], newDict[k])
+			except KeyError:
+				oldDict[k] = newDict[k]
 		else:
 			try:
 				oldDict[k] += newDict[k]
