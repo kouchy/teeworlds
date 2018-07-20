@@ -114,32 +114,32 @@ $(document).ready(function() {
 
 			plots = [
 				{
-					elem: 'plot1', title: 'Ratio kills/deaths over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot1', title: 'Kills / (Deaths + Suicides)', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].ratio.kill.date, y: players_data[pseudo].ratio.kill.val, name: pseudo, type: 'scatter' }),
 				},
 				{
-					elem: 'plot2', title: 'Ratio flag over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot2', title: 'Flags capture / Flags grabs', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].ratio.flag.date, y: players_data[pseudo].ratio.flag.val, name: pseudo, type: 'scatter' }),
 				},
 				{
-					elem: 'plot3', title: 'Kills over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot3', title: 'Kills', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].kill.number.date, y: players_data[pseudo].kill.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
-					elem: 'plot4', title: 'Deaths over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot4', title: 'Deaths', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].death.number.date, y: players_data[pseudo].death.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
-					elem: 'plot5', title: 'Suicides over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot5', title: 'Suicides', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].suicide.number.date, y: players_data[pseudo].suicide.number.val, name: pseudo, type: 'scatter' }),
 				},
 				{
-					elem: 'plot6', title: 'Time spent (in minutes) over time', stats: player_ratio, yaxis_type: 'none',
+					elem: 'plot6', title: 'Time spent', stats: player_ratio, xaxis: { title: 'Date', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 					create_stat: pseudo => ({ x: players_data[pseudo].game.time.date, y: players_data[pseudo].game.time.val, name: pseudo, type: 'scatter' }),
 				},
 			];
 
-			plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, all_players.map(pseudo => plot_data.create_stat(pseudo)), { title: plot_data.title, autorange: true, yaxis: { type: plot_data.yaxis_type, autorange: true}}));
+			plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, all_players.map(pseudo => plot_data.create_stat(pseudo)), { title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis}));
 		}
 	});
 });

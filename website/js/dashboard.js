@@ -102,40 +102,40 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 {
 	plots = [
 		{
-			elem: 'plot1', title: 'Kills, deaths and suicides', stats: player_stats, yaxis_type: 'none',
+			elem: 'plot1', title: 'Kills, deaths and suicides', stats: player_stats, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: stat => ({ x: all_players, y: all_stats_by_type[stat].number, name: capitalize(stat), type: 'bar' }),
 		},
 		{
-			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0], yaxis_type: 'log',
+			elem: 'plot2', title: 'Chrono (shortest flag capture)', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in seconds)', type: 'log', autorange: true },
 			create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 		},
 		{
-			elem: 'plot3', title: 'Kills by weapons', stats: weapons, yaxis_type: 'none',
+			elem: 'plot3', title: 'Kills by weapons', stats: weapons, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot4', title: 'Deaths by weapons', stats: weapons, yaxis_type: 'none',
+			elem: 'plot4', title: 'Deaths by weapons', stats: weapons, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot5', title: 'Collected items', stats: items, yaxis_type: 'none',
+			elem: 'plot5', title: 'Collected items', stats: items, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: item => ({ x: all_players, y: all_stats_by_type.item[item], name: items_names[item] || capitalize(item), type: 'bar' }),
 		},
 		{
-			elem: 'plot6', title: 'Flag actions', stats: flag_stats, yaxis_type: 'none',
+			elem: 'plot6', title: 'Flag actions', stats: flag_stats, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Victories and defeats', stats: game_win, yaxis_type: 'none',
+			elem: 'plot7', title: 'Victories and defeats', stats: game_win, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: victory => ({ x: all_players, y: all_stats_by_type.game[victory], name: capitalize(victory), type: 'bar' }),
 		},
 		{
-			elem: 'plot9', title: 'Time spent (in minutes)', stats: [0], yaxis_type: 'none',
-			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
+			elem: 'plot9', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
+			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
 
-	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, yaxis: { type: plot_data.yaxis_type, autorange: true} }));
+	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
 
 	let kill_data = [
 		{
@@ -151,9 +151,9 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		}
 	];
 	let kill_layout = {
-		title: 'Killer/killed heatmap',
-		xaxis: {title: 'Killer'},
-		yaxis: {title: 'Killed'},
+		title: 'Killer/killed by weapons heatmap',
+		xaxis: {title: 'Killer pseudo'},
+		yaxis: {title: 'Killed pseudo'},
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
 }
@@ -169,7 +169,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 
 	for (let p = 0; p < all_players.length; p++) {
 		if (all_stats_by_type.game.victory[p] && all_stats_by_type.game.defeat[p])
-			all_stats_by_type.game.victory[p] = Math.round((all_stats_by_type.game.victory[p] / all_stats_by_type.game.defeat[p])*10000)/100;
+			all_stats_by_type.game.victory[p] = Math.round((all_stats_by_type.game.victory[p] / all_stats_by_type.game.defeat[p])*100)/100;
 	}
 
 	for (let p = 0; p < all_players.length; p++) {
@@ -192,42 +192,48 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		});
 	}
 
+	let ratios = [];
+	ratios.push(all_stats_by_type.ratio.kill);
+	ratios.push(all_stats_by_type.ratio.flag);
+	ratios.push(all_stats_by_type.game.victory);
+
+	let ratios_legend = [];
+	ratios_legend.push(capitalize(player_ratio[0]));
+	ratios_legend.push(capitalize(player_ratio[1]));
+	ratios_legend.push(capitalize(game_win[0]));
+
 	plots = [
 		{
-			elem: 'plot1', title: 'Ratio kill and flag', stats: player_ratio, barmode: 'group', yaxis_type: 'none',
-			create_stat: ratio => ({ x: all_players, y: all_stats_by_type.ratio[ratio], name:  player_ratio_names[ratio] || capitalize(ratio), type: 'bar' }),
+			elem: 'plot1', title: 'Ratios', stats: [0,1,2], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
+			create_stat: ratio => ({ x: all_players, y: ratios[ratio], name: ratios_legend[ratio], type: 'bar' }),
 		},
 		{
-			elem: 'plot2', title: 'Chrono (shortest flag time in seconds)', stats: [0], barmode: 'group', yaxis_type: 'log',
+			elem: 'plot2', title: 'Chrono (shortest flag capture)', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in seconds)', type: 'log', autorange: true },
 			create_stat: () => ({ x: keys_sorted_chronos, y: vals_sorted_chronos, name: 'Flag time (sec)', type: 'bar' }),
 		},
 		{
-			elem: 'plot3', title: 'Percentage of kills by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
+			elem: 'plot3', title: 'Kills by weapons', stats: weapons, barmode: 'stack', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Percentage %', type: 'none', autorange: true },
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.kill.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot4', title: 'Percentage of deaths by weapons', stats: weapons, barmode: 'stack', yaxis_type: 'none',
+			elem: 'plot4', title: 'Deaths by weapons', stats: weapons, barmode: 'stack', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Percentage %', type: 'none', autorange: true },
 			create_stat: weapon => ({ x: all_players, y: all_stats_by_type.death.weapon[weapon], name: capitalize(weapon), type: 'bar' }),
 		},
 		{
-			elem: 'plot5', title: 'Percentage of collected items', stats: items, barmode: 'group', yaxis_type: 'log',
+			elem: 'plot5', title: 'Collected items', stats: items, barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Percentage %', type: 'log', autorange: true },
 			create_stat: item => ({ x: all_players, y: all_stats_by_type.item[item], name: items_names[item] || capitalize(item), type: 'bar' }),
 		},
 		{
-			elem: 'plot6', title: 'Percentage of flag actions', stats: flag_stats, barmode: 'stack', yaxis_type: 'none',
+			elem: 'plot6', title: 'Flag actions', stats: flag_stats, barmode: 'stack', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Percentage %', type: 'none', autorange: true },
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Victory/defeat ratio', stats: [0], yaxis_type: 'none',
-			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.victory, name: capitalize(game_win[0]), type: 'bar' }),
-		},
-		{
-			elem: 'plot9', title: 'Time spent (in minutes)', stats: [0], barmode: 'group', yaxis_type: 'none',
-			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Time (sec)', type: 'bar' }),
+			elem: 'plot8', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Tim (in minutes)', type: 'none', autorange: true },
+			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
 
-	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: plot_data.barmode, title: plot_data.title, autorange: true, yaxis: { type: plot_data.yaxis_type, autorange: true}}));
+	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: plot_data.barmode, title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis}));
 
 	let max_kill_ratio = Math.max.apply(null,[].concat.apply([],player_kill_ratio).filter(ratio => !!(ratio/ratio) ));
 	let kill_data = [
@@ -247,11 +253,11 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		}
 	];
 	let kill_layout = {
-		title: 'Killer/killed ratio heatmap',
-		xaxis: {title: 'Killer'},
-		yaxis: {title: 'Killed'},
+		title: 'Killer/killed by weapons ratio heatmap',
+		xaxis: {title: 'Killer pseudo'},
+		yaxis: {title: 'Killed pseudo'},
 	};
-	Plotly.newPlot('plot8', kill_data, kill_layout);
+	Plotly.newPlot('plot7', kill_data, kill_layout);
 }
 
 
@@ -308,7 +314,7 @@ function draw_dashboard(path, update = false)
 		if (!update)
 		{
 			$("#loader").hide();
-			$("#raw_json").append(`<a href="${path}" class="btn btn-primary" role="button" target="_blank">Raw JSON data file</a>`);
+			$("#raw_json").append(`<a href="${path}" class="btn btn-primary" role="button" style="margin-top:40px;" target="_blank">Raw JSON data file</a>`);
 		}
 
 		$("#error").hide();
