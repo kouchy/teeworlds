@@ -677,6 +677,8 @@ def recursiveMerge(oldDict, newDict):
 				oldDict[k] += newDict[k]
 			except KeyError:
 				oldDict[k] = newDict[k]
+			except TypeError: # certainly trying to merge a ratio
+				pass
 
 
 def mergeStats(stats, newStats):
