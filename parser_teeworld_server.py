@@ -808,6 +808,9 @@ def run(args):
 
 	outFile = args.out
 
+	if outFile == "":
+		raise ValueError("Output path can't be null.")
+
 
 	signal.signal(signal.SIGINT, signal_handler)
 
@@ -840,7 +843,7 @@ def run(args):
 
 			if forceDump or (dump_time + 0.5) < time.time():
 
-				if fileNameChanged(args.out):
+				if create_dayly_file and fileNameChanged(args.out):
 					if outFile != "":
 						clearPlayersTeam(current_stats)
 						dumpStats(current_stats) # save correctly the old stats before any changing of file
