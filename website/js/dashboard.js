@@ -169,7 +169,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 
 	for (let p = 0; p < all_players.length; p++) {
 		if (all_stats_by_type.game.victory[p] && all_stats_by_type.game.defeat[p])
-			all_stats_by_type.game.victory[p] = Math.round((all_stats_by_type.game.victory[p] / all_stats_by_type.game.defeat[p])*10000)/100;
+			all_stats_by_type.game.victory[p] = Math.round((all_stats_by_type.game.victory[p] / all_stats_by_type.game.defeat[p])*100)/100;
 	}
 
 	for (let p = 0; p < all_players.length; p++) {
@@ -192,10 +192,20 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		});
 	}
 
+	let ratios = [];
+	ratios.push(all_stats_by_type.ratio.kill);
+	ratios.push(all_stats_by_type.ratio.flag);
+	ratios.push(all_stats_by_type.game.victory);
+
+	let ratios_legend = [];
+	ratios_legend.push(capitalize(player_ratio[0]));
+	ratios_legend.push(capitalize(player_ratio[1]));
+	ratios_legend.push(capitalize(game_win[0]));
+
 	plots = [
 		{
-			elem: 'plot1', title: 'Ratio kill and flag', stats: player_ratio, barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
-			create_stat: ratio => ({ x: all_players, y: all_stats_by_type.ratio[ratio], name:  player_ratio_names[ratio] || capitalize(ratio), type: 'bar' }),
+			elem: 'plot1', title: 'Ratios', stats: [0,1,2], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
+			create_stat: ratio => ({ x: all_players, y: ratios[ratio], name: ratios_legend[ratio], type: 'bar' }),
 		},
 		{
 			elem: 'plot2', title: 'Chrono (shortest flag capture)', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in seconds)', type: 'log', autorange: true },
@@ -218,11 +228,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Victory/defeat ratio', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Ratio', type: 'none', autorange: true },
-			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.victory, name: capitalize(game_win[0]), type: 'bar' }),
-		},
-		{
-			elem: 'plot9', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Tim (in minutes)', type: 'none', autorange: true },
+			elem: 'plot8', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Tim (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
@@ -251,7 +257,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		xaxis: {title: 'Killer pseudo'},
 		yaxis: {title: 'Killed pseudo'},
 	};
-	Plotly.newPlot('plot8', kill_data, kill_layout);
+	Plotly.newPlot('plot7', kill_data, kill_layout);
 }
 
 
