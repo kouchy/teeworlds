@@ -208,32 +208,95 @@ def addDictIfNotExist(stats, newDictKey, newValue):
 # ==============================================================================
 # ========================================================== LOG PARSE FUNCTIONS
 def initPlayer(playerKey, stats):
-	if not playerKey in stats.keys():
-		stats[playerKey] = {}
+	addDictIfNotExist(stats, playerKey, {})
 
-	if not 'suicide' in stats[playerKey]:
-		stats[playerKey]['suicide'] = {'number' : 0, 'weapon' : {'world': 0, 'grenade': 0}, 'with_flag': 0}
+	addDictIfNotExist(stats[playerKey],'suicide', {})
+	addDictIfNotExist(stats[playerKey]['suicide'],'number',    0)
+	addDictIfNotExist(stats[playerKey]['suicide'],'with_flag', 0)
+	addDictIfNotExist(stats[playerKey]['suicide'],'weapon',   {})
+	addDictIfNotExist(stats[playerKey]['suicide']['weapon'], 'world',   0)
+	addDictIfNotExist(stats[playerKey]['suicide']['weapon'], 'grenade', 0)
+	addDictIfNotExist(stats[playerKey]['suicide']['weapon'], 'grenade', 0)
 
-	if not 'kill' in stats[playerKey]:
-		stats[playerKey]['kill'   ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'flag_defense': 0, 'flag_attack': 0}
 
-	if not 'damage' in stats[playerKey]:
-		stats[playerKey]['damage' ] = {'take' : {'armor': 0, 'health': 0, 'player' : {}}, 'give' : {'armor': 0, 'health': 0, 'player' : {}}, 'itself' : {'armor': 0, 'health': 0}}
+	addDictIfNotExist(stats[playerKey],'kill', {})
+	addDictIfNotExist(stats[playerKey]['kill'],'number',       0)
+	addDictIfNotExist(stats[playerKey]['kill'],'flag_defense', 0)
+	addDictIfNotExist(stats[playerKey]['kill'],'flag_attack',  0)
+	addDictIfNotExist(stats[playerKey]['kill'],'player',      {})
+	addDictIfNotExist(stats[playerKey]['kill'],'weapon',      {})
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'laser',   0)
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'ninja',   0)
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'grenade', 0)
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'gun',     0)
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'hammer',  0)
+	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'shotgun', 0)
 
-	if not 'item' in stats[playerKey]:
-		stats[playerKey]['item'   ] = {'heart': 0, 'armor': 0, 'laser': 0, 'ninja': 0, 'grenade': 0, 'shotgun': 0}
 
-	if not 'flag' in stats[playerKey]:
-		stats[playerKey]['flag'   ] = {'grab': 0, 'return': 0, 'capture': 0, 'min_time': 0.}
+	addDictIfNotExist(stats[playerKey],'death', {})
+	addDictIfNotExist(stats[playerKey]['death'],'number',    0)
+	addDictIfNotExist(stats[playerKey]['death'],'with_flag', 0)
+	addDictIfNotExist(stats[playerKey]['death'],'player',   {})
+	addDictIfNotExist(stats[playerKey]['death'],'weapon',   {})
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'laser',   0)
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'ninja',   0)
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'grenade', 0)
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'gun',     0)
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'hammer',  0)
+	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'shotgun', 0)
 
-	if not 'ratio' in stats[playerKey]:
-		stats[playerKey]['ratio'  ] = {'kill': None, 'flag': None, 'damage': None}
 
-	if not 'game' in stats[playerKey]:
-		stats[playerKey]['game'   ] = {'time': 0, 'team': "", 'victory': 0, 'defeat': 0}
+	addDictIfNotExist(stats[playerKey],'damage', {})
+	addDictIfNotExist(stats[playerKey]['damage'],'take',   {})
+	addDictIfNotExist(stats[playerKey]['damage']['take'], 'armor',   0)
+	addDictIfNotExist(stats[playerKey]['damage']['take'], 'health',  0)
+	addDictIfNotExist(stats[playerKey]['damage']['take'], 'player', {})
+	addDictIfNotExist(stats[playerKey]['damage'],'give',   {})
+	addDictIfNotExist(stats[playerKey]['damage']['give'], 'armor',   0)
+	addDictIfNotExist(stats[playerKey]['damage']['give'], 'health',  0)
+	addDictIfNotExist(stats[playerKey]['damage']['give'], 'player', {})
+	addDictIfNotExist(stats[playerKey]['damage'],'itself',   {})
+	addDictIfNotExist(stats[playerKey]['damage']['itself'], 'armor',  0)
+	addDictIfNotExist(stats[playerKey]['damage']['itself'], 'health', 0)
 
-	if not 'death' in stats[playerKey]:
-		stats[playerKey]['death'  ] = {'number' : 0, 'weapon' : {'laser': 0, 'ninja': 0, 'grenade': 0, 'gun': 0, 'hammer': 0, 'shotgun': 0}, 'player' : {}, 'with_flag': 0}
+
+	addDictIfNotExist(stats[playerKey],'item', {})
+	addDictIfNotExist(stats[playerKey]['item'],'heart',   0)
+	addDictIfNotExist(stats[playerKey]['item'],'armor',   0)
+	addDictIfNotExist(stats[playerKey]['item'],'laser',   0)
+	addDictIfNotExist(stats[playerKey]['item'],'ninja',   0)
+	addDictIfNotExist(stats[playerKey]['item'],'grenade', 0)
+	addDictIfNotExist(stats[playerKey]['item'],'shotgun', 0)
+
+
+	addDictIfNotExist(stats[playerKey],'flag', {})
+	addDictIfNotExist(stats[playerKey]['flag'],'grab',     0)
+	addDictIfNotExist(stats[playerKey]['flag'],'return',   0)
+	addDictIfNotExist(stats[playerKey]['flag'],'capture',  0)
+	addDictIfNotExist(stats[playerKey]['flag'],'min_time',0.)
+
+
+	addDictIfNotExist(stats[playerKey],'ratio', {})
+	addDictIfNotExist(stats[playerKey]['ratio'],'kill',   None)
+	addDictIfNotExist(stats[playerKey]['ratio'],'flag',   None)
+	addDictIfNotExist(stats[playerKey]['ratio'],'damage', None)
+
+
+	addDictIfNotExist(stats[playerKey],'game', {})
+	addDictIfNotExist(stats[playerKey]['game'],'time',    0)
+	addDictIfNotExist(stats[playerKey]['game'],'defeat',  0)
+	addDictIfNotExist(stats[playerKey]['game'],'victory', 0)
+	addDictIfNotExist(stats[playerKey]['game'],'team',   "")
+
+
+def initPlayers(stats):
+	for playerName in stats.keys():
+		initPlayer(playerName, stats)
+
+
+def initNewPlayer(playerName, stats):
+	if not playerName in stats:
+		initPlayer(playerName, stats)
 
 
 def getWeaponName(weapon):
@@ -307,22 +370,21 @@ def countNumPlayersInGame():
 	return count
 
 
-def pasreLogLineGame(message, stats):
+def parseLogLineGame(message, stats):
 
 	logType = message.split(" ",1)
 
 	if logType[0] == "kill": # kill killer='1:Bigdaddy' victim='0:Badmom' weapon=1 special=0
-
 		killerPosStart = logType[1].find(":") +1
-		killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
+		killerPosEnd   = logType[1].find("\' victim=\'", killerPosStart+1)
 		killerName     = logType[1][killerPosStart:killerPosEnd]
 
 		victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
-		victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
+		victimPosEnd   = logType[1].find("\' weapon=", victimPosStart+1)
 		victimName     = logType[1][victimPosStart:victimPosEnd]
 
 		weaponPosStart = victimPosEnd + 9
-		weaponPosEnd   = logType[1].find(" ",weaponPosStart+1)
+		weaponPosEnd   = logType[1].find(" ", weaponPosStart+1)
 		weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
 
 		if weaponName == 'server': # killed by the server or team change so ignore it
@@ -332,111 +394,57 @@ def pasreLogLineGame(message, stats):
 		specialName     = logType[1][specialPosStart]
 
 
-		initPlayer(killerName, stats)
-		initPlayer(victimName, stats)
+		initNewPlayer(killerName, stats)
+		initNewPlayer(victimName, stats)
 
 		if killerName == victimName: # then a suicide
-
-			try:
-				stats[killerName]['suicide']['number'] += 1
-			except KeyError:
-				stats[killerName]['suicide']['number'] = 1
-
-			try:
-				stats[killerName]['suicide']['weapon'][weaponName] += 1
-			except KeyError:
-				stats[killerName]['suicide']['weapon'][weaponName] = 1
+			stats[killerName]['suicide']['number'] += 1
+			stats[killerName]['suicide']['weapon'][weaponName] += 1
 
 			if specialName == "3":
-				try:
-					stats[killerName]['suicide']['with_flag'] += 1
-				except KeyError:
-					stats[killerName]['suicide']['with_flag'] = 1
+				stats[killerName]['suicide']['with_flag'] += 1
 
 		else:
-			try:
-				stats[killerName]['kill']['number'] += 1
-			except KeyError:
-				stats[killerName]['kill']['number'] = 1
+			stats[killerName]['kill']['number'] += 1
+			stats[killerName]['kill']['weapon'][weaponName] += 1
 
-			try:
-				stats[killerName]['kill']['weapon'][weaponName] += 1
-			except KeyError:
-				stats[killerName]['kill']['weapon'][weaponName] = 1
-
-			try:
-				stats[killerName]['kill']['player'][victimName] += 1
-			except KeyError:
-				stats[killerName]['kill']['player'][victimName] = 1
+			addDictIfNotExist(stats[killerName]['kill']['player'], victimName, 0)
+			stats[killerName]['kill']['player'][victimName] += 1
 
 
-			try:
-				stats[victimName]['death']['number'] += 1
-			except KeyError:
-				stats[victimName]['death']['number'] = 1
+			stats[victimName]['death']['number'] += 1
+			stats[victimName]['death']['weapon'][weaponName] += 1
 
-			try:
-				stats[victimName]['death']['weapon'][weaponName] += 1
-			except KeyError:
-				stats[victimName]['death']['weapon'][weaponName] = 1
-
-			try:
-				stats[victimName]['death']['player'][killerName] += 1
-			except KeyError:
-				stats[victimName]['death']['player'][killerName] = 1
+			addDictIfNotExist(stats[victimName]['death']['player'], killerName, 0)
+			stats[victimName]['death']['player'][killerName] += 1
 
 
 			if specialName == "3": # the killer and the victim had the flag
-				try:
-					stats[victimName]['death']['with_flag'] += 1
-				except KeyError:
-					stats[victimName]['death']['with_flag'] = 1
-
-				try:
-					stats[killerName]['kill']['flag_defense'] += 1
-				except KeyError:
-					stats[killerName]['kill']['flag_defense'] = 1
-
-				try:
-					stats[killerName]['kill']['flag_attack'] += 1
-				except KeyError:
-					stats[killerName]['kill']['flag_attack'] = 1
+				stats[victimName]['death']['with_flag'] += 1
+				stats[killerName]['kill']['flag_defense'] += 1
+				stats[killerName]['kill']['flag_attack'] += 1
 
 			elif specialName == "2": # the killer had the flag
-				try:
-					stats[killerName]['kill']['flag_defense'] += 1
-				except KeyError:
-					stats[killerName]['kill']['flag_defense'] = 1
+				stats[killerName]['kill']['flag_defense'] += 1
 
 			elif specialName == "1": # the victim had the flag
-				try:
-					stats[killerName]['kill']['flag_attack'] += 1
-				except KeyError:
-					stats[killerName]['kill']['flag_attack'] = 1
-
-				try:
-					stats[victimName]['death']['with_flag'] += 1
-				except KeyError:
-					stats[victimName]['death']['with_flag'] = 1
+				stats[killerName]['kill']['flag_attack'] += 1
+				stats[victimName]['death']['with_flag'] += 1
 
 
 	elif logType[0] == "pickup": # pickup player='0:Badmom' item=1/0
-
 		playerPosStart = logType[1].find(":") +1
-		playerPosEnd   = logType[1].find("\' item=",playerPosStart+1)
+		playerPosEnd   = logType[1].find("\' item=", playerPosStart+1)
 		playerName     = logType[1][playerPosStart:playerPosEnd]
 
-		initPlayer(playerName, stats)
+		initNewPlayer(playerName, stats)
 
 		itemName = getItemName(logType[1][playerPosEnd + 7])
 
 		if itemName == 'weapon':
 			itemName = getWeaponName(logType[1][playerPosEnd + 9])
 
-		try:
-			stats[playerName]['item'][itemName] += 1
-		except KeyError:
-			stats[playerName]['item'][itemName] = 1
+		stats[playerName]['item'][itemName] += 1
 
 
 	elif logType[0].find("flag") == 0: # flag_grab player='0:Badmom'
@@ -444,10 +452,10 @@ def pasreLogLineGame(message, stats):
 			return False
 
 		playerPosStart = logType[1].find(":") +1
-		playerPosEnd   = logType[1].find("\'\n",playerPosStart+1)
+		playerPosEnd   = logType[1].find("\'\n", playerPosStart+1)
 		playerName     = logType[1][playerPosStart:playerPosEnd]
 
-		initPlayer(playerName, stats)
+		initNewPlayer(playerName, stats)
 
 		action = ""
 
@@ -458,10 +466,7 @@ def pasreLogLineGame(message, stats):
 		elif logType[0]== "flag_return":
 			action = 'return'
 
-		try:
-			stats[playerName]['flag'][action] += 1
-		except KeyError:
-			stats[playerName]['flag'][action] = 1
+		stats[playerName]['flag'][action] += 1
 
 
 	elif logType[0] == "victory": # victory blue team
@@ -479,26 +484,22 @@ def pasreLogLineGame(message, stats):
 			else : #not in game
 				continue
 
-			try:
-				stats[playerName]['game'][state] += 1
-			except KeyError:
-				stats[playerName]['game'][state] = 1
+			stats[playerName]['game'][state] += 1
 
 		return True # dump to update victory status
 
 
-	elif  logType[0] == "damage": # damage killer='1:Badmom' victim='0:Kouchy' weapon=1 health=2 armor=0
-
+	elif logType[0] == "damage": # damage killer='1:Badmom' victim='0:Kouchy' weapon=1 health=2 armor=0
 		killerPosStart = logType[1].find(":") +1
-		killerPosEnd   = logType[1].find("\' victim=\'",killerPosStart+1)
+		killerPosEnd   = logType[1].find("\' victim=\'", killerPosStart+1)
 		killerName     = logType[1][killerPosStart:killerPosEnd]
 
 		victimPosStart = logType[1].find(":", killerPosEnd + 10) +1
-		victimPosEnd   = logType[1].find("\' weapon=",victimPosStart+1)
+		victimPosEnd   = logType[1].find("\' weapon=", victimPosStart+1)
 		victimName     = logType[1][victimPosStart:victimPosEnd]
 
 		weaponPosStart = victimPosEnd + 9
-		weaponPosEnd   = logType[1].find(" ",weaponPosStart+1)
+		weaponPosEnd   = logType[1].find(" ", weaponPosStart+1)
 		weaponName     = getWeaponName(logType[1][weaponPosStart:weaponPosEnd])
 
 		if weaponName == 'server': # killed by the server or team change so ignore it
@@ -514,77 +515,40 @@ def pasreLogLineGame(message, stats):
 		armor = int(armorName)
 
 
-		initPlayer(killerName, stats)
-		initPlayer(victimName, stats)
+		initNewPlayer(killerName, stats)
+		initNewPlayer(victimName, stats)
 
 
 		if killerName == victimName: # then damage to itself
-
-			try:
-				stats[killerName]['damage']['itself']['armor'] += armor
-			except KeyError:
-				stats[killerName]['damage']['itself']['armor'] = armor
-
-			try:
-				stats[killerName]['damage']['itself']['health'] += health
-			except KeyError:
-				stats[killerName]['damage']['itself']['health'] = health
+			stats[killerName]['damage']['itself']['armor' ] += armor
+			stats[killerName]['damage']['itself']['health'] += health
 
 		else:
+			stats[killerName]['damage']['give']['armor' ] += armor
+			stats[killerName]['damage']['give']['health'] += health
 
-			try:
-				stats[killerName]['damage']['give']['armor'] += armor
-			except KeyError:
-				stats[killerName]['damage']['give']['armor'] = armor
+			addDictIfNotExist(stats[killerName]['damage']['give']['player'],victimName, {})
+			addDictIfNotExist(stats[killerName]['damage']['give']['player'][victimName], 'armor',  0)
+			addDictIfNotExist(stats[killerName]['damage']['give']['player'][victimName], 'health', 0)
 
-			try:
-				stats[killerName]['damage']['give']['health'] += health
-			except KeyError:
-				stats[killerName]['damage']['give']['health'] = health
-
-
-			addDictIfNotExist(stats[killerName]['damage']['give']['player'], victimName, {})
-
-			try:
-				stats[killerName]['damage']['give']['player'][victimName]['armor'] += armor
-			except KeyError:
-				stats[killerName]['damage']['give']['player'][victimName]['armor'] = armor
-
-			try:
-				stats[killerName]['damage']['give']['player'][victimName]['health'] += health
-			except KeyError:
-				stats[killerName]['damage']['give']['player'][victimName]['health'] = health
+			stats[killerName]['damage']['give']['player'][victimName]['armor' ] += armor
+			stats[killerName]['damage']['give']['player'][victimName]['health'] += health
 
 
+			stats[victimName]['damage']['take']['armor' ] += armor
+			stats[victimName]['damage']['take']['health'] += health
 
-			try:
-				stats[victimName]['damage']['take']['armor'] += armor
-			except KeyError:
-				stats[victimName]['damage']['take']['armor'] = armor
+			addDictIfNotExist(stats[victimName]['damage']['take']['player'],killerName, {})
+			addDictIfNotExist(stats[victimName]['damage']['take']['player'][killerName], 'armor',  0)
+			addDictIfNotExist(stats[victimName]['damage']['take']['player'][killerName], 'health', 0)
 
-			try:
-				stats[victimName]['damage']['take']['health'] += health
-			except KeyError:
-				stats[victimName]['damage']['take']['health'] = health
-
-
-			addDictIfNotExist(stats[victimName]['damage']['take']['player'], killerName, {})
-
-			try:
-				stats[victimName]['damage']['take']['player'][killerName]['armor'] += armor
-			except KeyError:
-				stats[victimName]['damage']['take']['player'][killerName]['armor'] = armor
-
-			try:
-				stats[victimName]['damage']['take']['player'][killerName]['health'] += health
-			except KeyError:
-				stats[victimName]['damage']['take']['player'][killerName]['health'] = health
-
+			stats[victimName]['damage']['take']['player'][killerName]['armor' ] += armor
+			stats[victimName]['damage']['take']['player'][killerName]['health'] += health
 
 	return False
 
 
-def pasreLogLineChat(message, stats, countGameTime=True):
+def parseLogLineChat(message, stats, countGameTime=True):
 
 	if message.find("flag was captured") != -1: # [5b4622aa][chat]: *** The red flag was captured by 'Badmom' (9.56 seconds)
 
@@ -599,7 +563,7 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		timePosEnd = message.find(" seconds)", timePosStart+1)
 		flagTime   = message[timePosStart:timePosEnd]
 
-		initPlayer(playerName, stats)
+		initNewPlayer(playerName, stats)
 
 		flagTime = float(flagTime)
 
@@ -617,14 +581,11 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		playerPosEnd   = message.find("\' ", playerPosStart+1)
 		playerName     = message[playerPosStart:playerPosEnd]
 
-		initPlayer(playerName, stats)
+		initNewPlayer(playerName, stats)
 
 		if countGameTime:
 			playerTime = playerLeaveTime(playerName)
-			try:
-				stats[playerName]['game']['time'] += playerTime
-			except KeyError:
-				stats[playerName]['game']['time'] = playerTime
+			stats[playerName]['game']['time'] += playerTime
 
 		teamName = ""
 
@@ -655,14 +616,11 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 		playerPosEnd   = message.find("\' has", playerPosStart+1)
 		playerName     = message[playerPosStart:playerPosEnd]
 
-		initPlayer(playerName, stats)
+		initNewPlayer(playerName, stats)
 
 		if countGameTime:
 			playerTime = playerLeaveTime(playerName)
-			try:
-				stats[playerName]['game']['time'] += playerTime
-			except KeyError:
-				stats[playerName]['game']['time'] = playerTime
+			stats[playerName]['game']['time'] += playerTime
 
 		stats[playerName]['game']['team'] = playerOffLineTeam
 
@@ -671,7 +629,7 @@ def pasreLogLineChat(message, stats, countGameTime=True):
 	return False
 
 
-def pasreLogLineDatafile(message, stats):
+def parseLogLineDatafile(message, stats):
 
 	if message.find("loading done. datafile=") != -1: # [5b4f6996][datafile]: loading done. datafile='maps/log1.map'
 
@@ -692,13 +650,13 @@ def parseLogLine(logline, stats, countGameTime=True):
 	logTitle = logline.split(": ",1)
 
 	if logTitle[0].find("game") != -1 and countNumPlayersInGame() > 1:
-		return pasreLogLineGame(logTitle[1], stats)
+		return parseLogLineGame(logTitle[1], stats)
 
 	elif logTitle[0].find("chat") != -1:
-		return pasreLogLineChat(logTitle[1], stats, countGameTime)
+		return parseLogLineChat(logTitle[1], stats, countGameTime)
 
 	elif logTitle[0].find("datafile") != -1:
-		return pasreLogLineDatafile(logTitle[1], stats)
+		return parseLogLineDatafile(logTitle[1], stats)
 
 	return False
 
@@ -708,31 +666,31 @@ def parseLogLine(logline, stats, countGameTime=True):
 
 # ==============================================================================
 # ======================================================= RENAME/MERGE FUNCTIONS
-def recursiveMerge(oldDict, newDict):
-	for k, v in newDict.items():
+def recursiveMerge(oldDict, addedDict):
+	for k, v in addedDict.items():
 		if isinstance(v, dict):
 			try:
-				recursiveMerge(oldDict[k], newDict[k])
+				recursiveMerge(oldDict[k], addedDict[k])
 			except KeyError:
-				oldDict[k] = newDict[k]
+				oldDict[k] = addedDict[k]
 		else:
 			try:
-				oldDict[k] += newDict[k]
+				oldDict[k] += addedDict[k]
 			except KeyError:
-				oldDict[k] = newDict[k]
+				oldDict[k] = addedDict[k]
 			except TypeError: # certainly trying to merge a ratio
 				pass
 
 
-def mergeStats(stats, newStats):
-	for playerName in newStats.keys():
+def mergeStats(stats, addedStats):
+	for playerName in addedStats.keys():
 		if not playerName in stats.keys():
-			stats[playerName] = newStats[playerName]
+			stats[playerName] = addedStats[playerName]
 
 		else:
 			# manage the min flag time
-			oldflagT =    stats[playerName]['flag']['min_time']
-			newflagT = newStats[playerName]['flag']['min_time']
+			oldflagT =      stats[playerName]['flag']['min_time']
+			newflagT = addedStats[playerName]['flag']['min_time']
 			saveFlagT = 0
 
 			if oldflagT == 0:
@@ -742,7 +700,7 @@ def mergeStats(stats, newStats):
 			else:
 				saveFlagT = min(newflagT, oldflagT)
 
-			recursiveMerge(stats[playerName], newStats[playerName])
+			recursiveMerge(stats[playerName], addedStats[playerName])
 
 
 			stats[playerName]['flag']['min_time'] = saveFlagT
@@ -758,6 +716,7 @@ def deletePlayer(stats, oldName):
 		return
 
 	del stats[oldName]
+
 
 	for playerName in stats.keys():
 
@@ -845,10 +804,7 @@ def mergePlayer(stats, oldName, newName):
 		statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
 		if oldName in statsDamageTakePlayer:
 			addDictIfNotExist(statsDamageTakePlayer, newName, {})
-			addDictIfNotExist(statsDamageTakePlayer[newName], 'armor',  0)
-			addDictIfNotExist(statsDamageTakePlayer[newName], 'health', 0)
-			statsDamageTakePlayer[newName]['armor' ] += statsDamageTakePlayer[oldName]['armor' ]
-			statsDamageTakePlayer[newName]['health'] += statsDamageTakePlayer[oldName]['health']
+			recursiveMerge(statsDamageTakePlayer[newName], statsDamageTakePlayer[oldName])
 
 			del statsDamageTakePlayer[oldName]
 
@@ -856,10 +812,7 @@ def mergePlayer(stats, oldName, newName):
 		statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
 		if oldName in statsDamageGivePlayer:
 			addDictIfNotExist(statsDamageGivePlayer, newName, {})
-			addDictIfNotExist(statsDamageGivePlayer[newName], 'armor',  0)
-			addDictIfNotExist(statsDamageGivePlayer[newName], 'health', 0)
-			statsDamageGivePlayer[newName]['armor' ] += statsDamageGivePlayer[oldName]['armor' ]
-			statsDamageGivePlayer[newName]['health'] += statsDamageGivePlayer[oldName]['health']
+			recursiveMerge(statsDamageGivePlayer[newName], statsDamageGivePlayer[oldName])
 
 			del statsDamageGivePlayer[oldName]
 
@@ -903,24 +856,31 @@ def renamePlayer(stats, oldName, newName):
 
 		statsDamageTakePlayer = stats[playerName]['damage']['take']['player']
 		if oldName in statsDamageTakePlayer:
-			addDictIfNotExist(statsDamageTakePlayer, newName, {})
-			statsDamageTakePlayer[newName]['armor' ] = statsDamageTakePlayer[oldName]['armor' ]
-			statsDamageTakePlayer[newName]['health'] = statsDamageTakePlayer[oldName]['health']
+			statsDamageTakePlayer[newName] = statsDamageTakePlayer[oldName]
 
 			del statsDamageTakePlayer[oldName]
 
 
 		statsDamageGivePlayer = stats[playerName]['damage']['give']['player']
 		if oldName in statsDamageGivePlayer:
-			addDictIfNotExist(statsDamageGivePlayer, newName, {})
-			statsDamageGivePlayer[newName]['armor' ] = statsDamageGivePlayer[oldName]['armor' ]
-			statsDamageGivePlayer[newName]['health'] = statsDamageGivePlayer[oldName]['health']
+			statsDamageGivePlayer[newName] = statsDamageGivePlayer[oldName]
 
 			del statsDamageGivePlayer[oldName]
 
 
 # ======================================================= RENAME/MERGE FUNCTIONS
 # ==============================================================================
+
+
+def openJsonStats(fileName):
+	stats = {}
+	with open(args.old) as oldStatsFile:
+		stats = json.load(oldStatsFile)
+
+	initPlayers(stats)     # To guaranty the availability of all statistics
+	clearPlayersTeam(tats) # prevent any error with team colors, because server just boot up
+
+	return stats
 
 
 def run(args):
@@ -950,11 +910,7 @@ def run(args):
 
 	# get old stats
 	if args.old is not None:
-		with open(args.old) as oldStatsFile:
-			current_stats = json.load(oldStatsFile)
-
-		clearPlayersTeam(current_stats) # prevent any error with team colors, because server just boot up
-
+		current_stats = openJsonStats(args.old)
 
 	create_dayly_file = args.old is None;
 
@@ -985,12 +941,8 @@ def run(args):
 
 					# outFile changed
 					try :
-						with open(outFile) as oldStatsFile:
-							current_stats = json.load(oldStatsFile)
-
-						clearPlayersTeam(current_stats) # prevent any error with team colors
+						current_stats = openJsonStats(outFile)
 						print("parser: load today stats: " + outFile)
-
 					except IOError:
 						print("parser: new output filename: " + outFile)
 						current_stats = {}
@@ -1010,8 +962,7 @@ def run(args):
 
 
 	elif args.action == "json":
-		with open(args.new) as newStatsFile:
-			mergeStats(current_stats, json.load(newStatsFile))
+		mergeStats(current_stats, openJsonStats(newStatsFile))
 
 
 	elif args.action == "rename":
