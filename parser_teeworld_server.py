@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # This program parse the logs of a teeworlds server in real time and return statistics on player in a JSON format.
-# Run:  $ python3 parser_teeworld_server.py --act help
+# Run:  $ python3 parser_teeworld_server.py --act help
 # to display the whole story help message.
 
 # =============================================================================
@@ -29,7 +29,7 @@ program_name      = ""
 
 # =============================================================================
 # =================================================================== CONSTANTS
-deletedPlayerName   = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
+deletedPlayerName   = "__deletedplayer__" # this name is too long for a teeworlds name so nobody can take it
 playerOffLineTeam   = ""
 playerOnLineTeam    = "online"
 playerSpectatorTeam = "spectators"
@@ -492,7 +492,7 @@ def parseLogLineGame(message, stats):
 		for playerName in stats.keys():
 			if stats[playerName]['game']['team'] == teamName: # it's a victory !
 				state = 'victory'
-			elif stats[playerName]['game']['team'] != "": # it's a defeat
+			elif stats[playerName]['game']['team'] != "": # it's a defeat
 				state = 'defeat'
 			else : #not in game
 				continue
@@ -637,7 +637,7 @@ def parseLogLineChat(message, stats, countGameTime=True):
 
 		stats[playerName]['game']['team'] = playerOffLineTeam
 
-		return True # dump the stats to prevent the case where the last player left then the server returns nothing else
+		return True # dump the stats to prevent the case where the last player left then the server returns nothing else
 
 	return False
 
@@ -936,7 +936,7 @@ def run(args):
 			outFile = ""
 
 
-		# read standard input
+		# read standard input
 		for log in map(str.rstrip, sys.stdin):
 			if args.echo:
 				print("server: " + log)
