@@ -975,7 +975,7 @@ def run(args):
 
 
 	elif args.action == "json":
-		mergeStats(current_stats, openJsonStats(newStatsFile))
+		mergeStats(current_stats, openJsonStats(args.new))
 
 
 	elif args.action == "rename":
