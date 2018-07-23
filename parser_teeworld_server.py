@@ -244,6 +244,7 @@ def initPlayer(playerKey, stats):
 	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'gun',     0)
 	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'hammer',  0)
 	addDictIfNotExist(stats[playerKey]['death']['weapon'], 'shotgun', 0)
+	addDictIfNotExist(stats[playerKey]['death'],'coords',   [])
 
 
 	addDictIfNotExist(stats[playerKey],'damage', {})
@@ -374,7 +375,7 @@ def parseLogLineGame(message, stats):
 
 	logType = message.split(" ",1)
 
-	if logType[0] == "kill": # kill killer='1:Bigdaddy' victim='0:Badmom' weapon=1 special=0
+	if logType[0] == "kill": # kill killer='1:Bigdaddy' victim='0:Badmom' weapon=1 special=0 x=12.5 y=32.1
 		killerPosStart = logType[1].find(":") +1
 		killerPosEnd   = logType[1].find("\' victim=\'", killerPosStart+1)
 		killerName     = logType[1][killerPosStart:killerPosEnd]
@@ -391,11 +392,23 @@ def parseLogLineGame(message, stats):
 			return False
 
 		specialPosStart = weaponPosEnd + 9
+		specialPosEnd   = logType[1].find(" ",specialPosStart+1)
 		specialName     = logType[1][specialPosStart]
 
+		xPosStart       = specialPosEnd + 3
+		xPosEnd         = logType[1].find(" ",xPosStart+1)
+		xName           = logType[1][xPosStart:xPosEnd]
+
+		yPosStart       = xPosEnd + 3
+		yPosEnd         = logType[1].find(" ",yPosStart+1)
+		yName           = logType[1][yPosStart:yPosEnd]
 
 		initNewPlayer(killerName, stats)
 		initNewPlayer(victimName, stats)
+
+
+		stats[victimName]['death']['coords'] += [[float(xName), float(yName)]];
+
 
 		if killerName == victimName: # then a suicide
 			stats[killerName]['suicide']['number'] += 1
