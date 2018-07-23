@@ -887,8 +887,8 @@ def renamePlayer(stats, oldName, newName):
 
 def openJsonStats(fileName):
 	stats = {}
-	with open(args.old) as oldStatsFile:
-		stats = json.load(oldStatsFile)
+	with open(fileName) as statsFile:
+		stats = json.load(statsFile)
 
 	initPlayers(stats)     # To guaranty the availability of all statistics
 	clearPlayersTeam(tats) # prevent any error with team colors, because server just boot up
