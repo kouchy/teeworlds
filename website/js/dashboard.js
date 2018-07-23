@@ -98,7 +98,7 @@ function to_object(keys, values, filter_func = () => true) {
 	return object;
 }
 
-function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills)
+function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords)
 {
 	plots = [
 		{
@@ -156,6 +156,31 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		yaxis: {title: 'Killed pseudo'},
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
+
+	let death_coords_data = []
+	all_players.forEach(function(pseudo,i){
+		death_coords_data.push({
+			x: death_coords[i].x,
+			y: death_coords[i].y,
+			mode: 'markers',
+			marker: { size: 4 },
+			type: 'scatter',
+			name: pseudo
+		})
+	})
+
+	let death_coords_layout = {
+		xaxis: {
+			range: [0, 9000]
+		},
+		yaxis: {
+			range: [7000, 0]
+		},
+
+		title: 'Death coords'
+	}
+	Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
+
 }
 
 function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio)
@@ -293,6 +318,17 @@ function draw_dashboard(path, update = false)
 			line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
 		});
 
+		// Get death coords
+		let death_coords = [];
+		all_players.forEach(function(pseudo){
+			let player_coords = { x:[], y:[] }
+			data[pseudo].death.coords.forEach(function(coords){
+				player_coords.x.push(coords[0])
+				player_coords.y.push(coords[1])
+			})
+			death_coords.push(player_coords)
+		})
+
 		// Recursively browse the json and accumulate data
 		all_players.forEach(pseudo => reduce_stat(data[pseudo], all_stats_by_type));
 		// Convert times to minute
@@ -308,7 +344,7 @@ function draw_dashboard(path, update = false)
 			vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
 
 		let type = get_type_from_path(path);
-		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills);
+		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords);
 		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
 
 		if (!update)
