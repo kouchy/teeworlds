@@ -890,8 +890,8 @@ def openJsonStats(fileName):
 	with open(fileName) as statsFile:
 		stats = json.load(statsFile)
 
-	initPlayers(stats)     # To guaranty the availability of all statistics
-	clearPlayersTeam(tats) # prevent any error with team colors, because server just boot up
+	initPlayers(stats)      # To guaranty the availability of all statistics
+	clearPlayersTeam(stats) # prevent any error with team colors, because server just boot up
 
 	return stats
 
