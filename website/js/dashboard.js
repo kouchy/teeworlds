@@ -130,7 +130,7 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: victory => ({ x: all_players, y: all_stats_by_type.game[victory], name: capitalize(victory), type: 'bar' }),
 		},
 		{
-			elem: 'plot9', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
+			elem: 'plot10', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
@@ -176,13 +176,15 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 				range:  [-1000, 9000],
 				domain: [-1000, 9000],
 				showgrid: false,
-				zeroline: false
+				zeroline: false,
+				title: "x",
 			},
 			yaxis: {
-				range:  [7000, 0],
+				range:  [5300, 1200],
 				domain: [7000, 0],
 				showgrid: false,
-				zeroline: false
+				zeroline: false,
+				title: "y",
 			},
 			images: [{
 				source: 'images/hd-map.png',
@@ -208,11 +210,11 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 				layer: 'below',
 				opacity: '0.5'
 			}],
-			height: 800,
-			width:  900,
-			title: 'Death coords'
+			// height: 700,
+			// width:  1000,
+			title: 'Death coordinates'
 		}
-		Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
+		Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
 	}
 }
 
@@ -323,7 +325,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "plot11", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 
@@ -358,8 +360,8 @@ function draw_dashboard(path, update = false)
 			{
 				let player_coords = { x:[], y:[] }
 				data[pseudo].death.coords.forEach(function(coords){
-					player_coords.x.push(coords[0])
-					player_coords.y.push(coords[1])
+					player_coords.x.push(coords[0]);
+					player_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
 				})
 				death_coords.push(player_coords)
 			}
