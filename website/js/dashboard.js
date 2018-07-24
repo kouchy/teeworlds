@@ -157,51 +157,53 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 	};
 	Plotly.newPlot('plot8', kill_data, kill_layout);
 
-	let death_coords_data = []
-	all_players.forEach(function(pseudo,i){
-		death_coords_data.push({
-			x: death_coords[i].x,
-			y: death_coords[i].y,
-			mode: 'markers',
-			marker: { size: 4 },
-			type: 'scatter',
-			name: pseudo
+	if (death_coords.length)
+	{
+		let death_coords_data = []
+		all_players.forEach(function(pseudo,i){
+			death_coords_data.push({
+				x: death_coords[i].x,
+				y: death_coords[i].y,
+				mode: 'markers',
+				marker: { size: 4 },
+				type: 'scatter',
+				name: pseudo
+			})
 		})
-	})
 
-	let death_coords_layout = {
-		xaxis: {
-			range:  [-1000, 9000],
-			domain: [-1000, 9000],
-			showgrid: false,
-			zeroline: false
-		},
-		yaxis: {
-			range:  [7000, 0],
-			domain: [7000, 0],
-			showgrid: false,
-			zeroline: false
-		},
-		images: [{
-			source: 'images/map.png',
-			xref: 'x',
-			yref: 'y',
-			x: -100,
-			y: -1100,
-			sizex: 9000,
-			sizey: 8000,
-			xanchor: 'left',
-			yanchor: 'top',
-			sizing: 'stretch',
-			layer: 'below',
-			opacity: '0.5'
-		}],
-		height: 576,
-		width:  648,
-		title: 'Death coords'
+		let death_coords_layout = {
+			xaxis: {
+				range:  [-1000, 9000],
+				domain: [-1000, 9000],
+				showgrid: false,
+				zeroline: false
+			},
+			yaxis: {
+				range:  [7000, 0],
+				domain: [7000, 0],
+				showgrid: false,
+				zeroline: false
+			},
+			images: [{
+				source: 'images/map.png',
+				xref: 'x',
+				yref: 'y',
+				x: -100,
+				y: -1100,
+				sizex: 9000,
+				sizey: 8000,
+				xanchor: 'left',
+				yanchor: 'top',
+				sizing: 'stretch',
+				layer: 'below',
+				opacity: '0.5'
+			}],
+			height: 576,
+			width:  648,
+			title: 'Death coords'
+		}
+		Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
 	}
-	Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
-
 }
 
 function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio)
@@ -311,7 +313,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "plot11", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 
@@ -342,12 +344,15 @@ function draw_dashboard(path, update = false)
 		// Get death coords
 		let death_coords = [];
 		all_players.forEach(function(pseudo){
-			let player_coords = { x:[], y:[] }
-			data[pseudo].death.coords.forEach(function(coords){
-				player_coords.x.push(coords[0])
-				player_coords.y.push(coords[1])
-			})
-			death_coords.push(player_coords)
+			if (data[pseudo].death.coords)
+			{
+				let player_coords = { x:[], y:[] }
+				data[pseudo].death.coords.forEach(function(coords){
+					player_coords.x.push(coords[0])
+					player_coords.y.push(coords[1])
+				})
+				death_coords.push(player_coords)
+			}
 		})
 
 		// Recursively browse the json and accumulate data
