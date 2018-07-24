@@ -183,21 +183,31 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			zeroline: false
 		},
 		images: [{
-			source: 'images/map.png',
+			source: 'images/hd-map.png',
 			xref: 'x',
 			yref: 'y',
-			x: -100,
-			y: -1100,
-			sizex: 9000,
-			sizey: 8000,
+
+			//// values for small map:
+			//x: -100,
+			//y: -1100,
+			//sizex: 9000,
+			//sizey: 8000,
+
+			// HD map, corners coords in tiles :
+			// x1=17, y1=60, x2=252, y2=140 (139?)
+			x: 544, // 16*32
+			y: 1920, // 60*32
+			sizex: 7520, // (252-17)*32
+			sizey: 2560, // (140-60)*32
+
 			xanchor: 'left',
 			yanchor: 'top',
 			sizing: 'stretch',
 			layer: 'below',
 			opacity: '0.5'
 		}],
-		height: 576,
-		width:  648,
+		height: 800,
+		width:  900,
 		title: 'Death coords'
 	}
 	Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
