@@ -98,7 +98,7 @@ function to_object(keys, values, filter_func = () => true) {
 	return object;
 }
 
-function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords)
+function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords, update = false)
 {
 	plots = [
 		{
@@ -135,7 +135,10 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		},
 	];
 
-	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
+	if (update)
+		plots.forEach(plot_data => Plotly.react(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
+	else
+		plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
 
 	let kill_data = [
 		{
@@ -155,7 +158,11 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		xaxis: {title: 'Killer pseudo'},
 		yaxis: {title: 'Killed pseudo'},
 	};
-	Plotly.newPlot('plot8', kill_data, kill_layout);
+
+	if (update)
+		Plotly.react('plot8', kill_data, kill_layout);
+	else
+		Plotly.newPlot('plot8', kill_data, kill_layout);
 
 	if (death_coords.length)
 	{
@@ -214,7 +221,10 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			// width:  1000,
 			title: 'Death coordinates'
 		}
-		Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
+		if (update)
+			Plotly.react('plot9', death_coords_data, death_coords_layout);
+		else
+			Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
 	}
 }
 
@@ -382,7 +392,7 @@ function draw_dashboard(path, update = false)
 			vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
 
 		let type = get_type_from_path(path);
-		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords);
+		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords, update);
 		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
 
 		if (!update)
