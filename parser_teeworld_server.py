@@ -418,7 +418,6 @@ def parseLogLineGame(message, stats):
 
 
 		stats[victimName]['death']['coords'] += [[float(xName), float(yName)]];
-		stats[killerName]['kill' ]['coords'] += [[float(xName), float(yName)]];
 
 
 		if killerName == victimName: # then a suicide
@@ -429,6 +428,9 @@ def parseLogLineGame(message, stats):
 				stats[killerName]['suicide']['with_flag'] += 1
 
 		else:
+			stats[killerName]['kill' ]['coords'] += [[float(xName), float(yName)]];
+
+
 			stats[killerName]['kill']['number'] += 1
 			stats[killerName]['kill']['weapon'][weaponName] += 1
 
