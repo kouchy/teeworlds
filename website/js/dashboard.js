@@ -98,7 +98,7 @@ function to_object(keys, values, filter_func = () => true) {
 	return object;
 }
 
-function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords, update = false)
+function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update = false)
 {
 	plots = [
 		{
@@ -130,7 +130,7 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: victory => ({ x: all_players, y: all_stats_by_type.game[victory], name: capitalize(victory), type: 'bar' }),
 		},
 		{
-			elem: 'plot10', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
+			elem: 'plot11', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
@@ -177,7 +177,20 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			})
 		})
 
-	let death_coords_layout = {
+	let kill_coords_data = []
+	if (kill_coords.length)
+		all_players.forEach(function(pseudo,i){
+			kill_coords_data.push({
+				x: kill_coords[i].x,
+				y: kill_coords[i].y,
+				mode: 'markers',
+				marker: { size: 4 },
+				type: 'scatter',
+				name: pseudo
+			})
+		})
+
+	let kill_death_coords_layout = {
 		xaxis: {
 			range:  [-1000, 9000],
 			domain: [-1000, 9000],
@@ -218,12 +231,20 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		}],
 		// height: 700,
 		// width:  1000,
-		title: 'Death coordinates'
+		title: 'Kill coordinates'
 	}
 	if (update)
-		Plotly.react('plot9', death_coords_data, death_coords_layout);
+	{
+		Plotly.react('plot9', kill_coords_data, kill_death_coords_layout);
+		kill_death_coords_layout.title = "Death coordinates";
+		Plotly.react('plot10', death_coords_data, kill_death_coords_layout);
+	}
 	else
-		Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
+	{
+		Plotly.newPlot('plot9', kill_coords_data, kill_death_coords_layout);
+		kill_death_coords_layout.title = "Death coordinates";
+		Plotly.newPlot('plot10', death_coords_data, kill_death_coords_layout);
+	}
 
 }
 
@@ -334,7 +355,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "plot11", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 
@@ -362,19 +383,33 @@ function draw_dashboard(path, update = false)
 			line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
 		});
 
-		// Get death coords
+		// Get kill and death coords
+		let kill_coords = [];
 		let death_coords = [];
-		all_players.forEach(function(pseudo){
-			if (data[pseudo].death.coords)
-			{
-				let player_coords = { x:[], y:[] }
-				data[pseudo].death.coords.forEach(function(coords){
-					player_coords.x.push(coords[0]);
-					player_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
-				})
-				death_coords.push(player_coords)
-			}
-		})
+		let type = get_type_from_path(path);
+		if (type == "daily")
+			all_players.forEach(function(pseudo){
+				if (data[pseudo].kill.coords)
+				{
+					let player_kill_coords = { x:[], y:[] }
+					if (!$.isEmptyObject(data[pseudo].kill.coords))
+						data[pseudo].kill.coords.forEach(function(coords){
+							player_kill_coords.x.push(coords[0]);
+							player_kill_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
+						})
+					kill_coords.push(player_kill_coords);
+				}
+				if (data[pseudo].death.coords)
+				{
+					let player_death_coords = { x:[], y:[] }
+					if (!$.isEmptyObject(data[pseudo].death.coords))
+						data[pseudo].death.coords.forEach(function(coords){
+							player_death_coords.x.push(coords[0]);
+							player_death_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
+						})
+					death_coords.push(player_death_coords);
+				}
+			})
 
 		// Recursively browse the json and accumulate data
 		all_players.forEach(pseudo => reduce_stat(data[pseudo], all_stats_by_type));
@@ -390,8 +425,7 @@ function draw_dashboard(path, update = false)
 		for (let i = 0; i < keys_sorted_chronos.length; i++)
 			vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
 
-		let type = get_type_from_path(path);
-		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, death_coords, update);
+		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update);
 		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
 
 		if (!update)
