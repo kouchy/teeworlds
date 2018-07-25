@@ -235,15 +235,21 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 	}
 	if (update)
 	{
-		Plotly.react('plot9', kill_coords_data, kill_death_coords_layout);
-		kill_death_coords_layout.title = "Death coordinates";
-		Plotly.react('plot10', death_coords_data, kill_death_coords_layout);
+		let kill_coords_layout = $.extend(true, {}, kill_death_coords_layout);
+		kill_coords_layout.title = "Kill coordinates";
+		Plotly.react('plot9', kill_coords_data, kill_coords_layout);
+		let death_coords_layout = $.extend(true, {}, kill_death_coords_layout);
+		death_coords_layout.title = "Death coordinates";
+		Plotly.react('plot10', death_coords_data, death_coords_layout);
 	}
 	else
 	{
-		Plotly.newPlot('plot9', kill_coords_data, kill_death_coords_layout);
-		kill_death_coords_layout.title = "Death coordinates";
-		Plotly.newPlot('plot10', death_coords_data, kill_death_coords_layout);
+		let kill_coords_layout = $.extend(true, {}, kill_death_coords_layout);
+		kill_coords_layout.title = "Kill coordinates";
+		Plotly.newPlot('plot9', kill_coords_data, kill_coords_layout);
+		let death_coords_layout = $.extend(true, {}, kill_death_coords_layout);
+		death_coords_layout.title = "Death coordinates";
+		Plotly.newPlot('plot10', death_coords_data, death_coords_layout);
 	}
 
 }
@@ -351,6 +357,8 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 }
 
 
+var prev_data = [];
+
 function draw_dashboard(path, update = false)
 {
 	if (!update) {
@@ -359,82 +367,88 @@ function draw_dashboard(path, update = false)
 		$("#error").hide();
 	}
 
-	$.getJSON( path, function( data ) {
-		let all_players = Object.keys(data);
-		let all_stats_by_type = get_new_empty_stats();
-
-		// Get player kill matrix
-		let player_kills = [];
-		all_players.forEach(function(pseudo,i){
-			player_kills.push([]);
-			all_players.forEach( function(pseudo2,j){
-				player_kills[i].push(
-					// without suicides
-					// i == j ? -1 : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
-					// with suicides
-					i == j ? data[pseudo].suicide.weapon.grenade : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
-			})
-		});
-
-		// Get player kill ratio matrix
-		// TODO: handle the few Infinity cases
-		let player_kill_ratio = player_kills.map(function(line){return line.slice();});
-		player_kill_ratio.forEach(function(line,i){
-			line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
-		});
-
-		// Get kill and death coords
-		let kill_coords = [];
-		let death_coords = [];
-		let type = get_type_from_path(path);
-		if (type == "daily")
-			all_players.forEach(function(pseudo){
-				if (data[pseudo].kill.coords)
-				{
-					let player_kill_coords = { x:[], y:[] }
-					if (!$.isEmptyObject(data[pseudo].kill.coords))
-						data[pseudo].kill.coords.forEach(function(coords){
-							player_kill_coords.x.push(coords[0]);
-							player_kill_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
-						})
-					kill_coords.push(player_kill_coords);
-				}
-				if (data[pseudo].death.coords)
-				{
-					let player_death_coords = { x:[], y:[] }
-					if (!$.isEmptyObject(data[pseudo].death.coords))
-						data[pseudo].death.coords.forEach(function(coords){
-							player_death_coords.x.push(coords[0]);
-							player_death_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
-						})
-					death_coords.push(player_death_coords);
-				}
-			})
-
-		// Recursively browse the json and accumulate data
-		all_players.forEach(pseudo => reduce_stat(data[pseudo], all_stats_by_type));
-		// Convert times to minute
-		all_stats_by_type.game.time = all_stats_by_type.game.time.map(t => Math.round(t/60.0));
-		// Get and filter out non positive flag time
-		let chronos = to_object(all_players, all_stats_by_type.flag.min_time, time => time > 0);
-		// We don't need it anymore
-		delete all_stats_by_type.flag.min_time;
-		// Sort chronos in ascending order
-		let keys_sorted_chronos = Object.keys(chronos).sort(function(a,b){return chronos[a]-chronos[b]});
-		let vals_sorted_chronos = [];
-		for (let i = 0; i < keys_sorted_chronos.length; i++)
-			vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
-
-		if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update);
-		if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
-
-		if (!update)
+	$.getJSON( path, function( data )
+	{
+		if(!_.isEqual(data, prev_data))
 		{
-			$("#loader").hide();
-			$("#raw_json").append(`<a href="${path}" class="btn btn-primary" role="button" style="margin-top:40px;" target="_blank">Raw JSON data file</a>`);
-		}
+			prev_data = data;
 
-		$("#error").hide();
+			let all_players = Object.keys(data);
+			let all_stats_by_type = get_new_empty_stats();
+
+			// Get player kill matrix
+			let player_kills = [];
+			all_players.forEach(function(pseudo,i){
+				player_kills.push([]);
+				all_players.forEach( function(pseudo2,j){
+					player_kills[i].push(
+						// without suicides
+						// i == j ? -1 : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
+						// with suicides
+						i == j ? data[pseudo].suicide.weapon.grenade : data[pseudo].death.player[pseudo2] ? data[pseudo].death.player[pseudo2] : 0);
+				})
+			});
+
+			// Get player kill ratio matrix
+			// TODO: handle the few Infinity cases
+			let player_kill_ratio = player_kills.map(function(line){return line.slice();});
+			player_kill_ratio.forEach(function(line,i){
+				line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
+			});
+
+			// Get kill and death coords
+			let kill_coords = [];
+			let death_coords = [];
+			let type = get_type_from_path(path);
+			if (type == "daily")
+				all_players.forEach(function(pseudo){
+					if (data[pseudo].kill.coords)
+					{
+						let player_kill_coords = { x:[], y:[] }
+						if (!$.isEmptyObject(data[pseudo].kill.coords))
+							data[pseudo].kill.coords.forEach(function(coords){
+								player_kill_coords.x.push(coords[0]);
+								player_kill_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
+							})
+						kill_coords.push(player_kill_coords);
+					}
+					if (data[pseudo].death.coords)
+					{
+						let player_death_coords = { x:[], y:[] }
+						if (!$.isEmptyObject(data[pseudo].death.coords))
+							data[pseudo].death.coords.forEach(function(coords){
+								player_death_coords.x.push(coords[0]);
+								player_death_coords.y.push(coords[1] > 5250 ? 5250 : coords[1] < 1250 ? 1250 : coords[1]);
+							})
+						death_coords.push(player_death_coords);
+					}
+				})
+
+			// Recursively browse the json and accumulate data
+			all_players.forEach(pseudo => reduce_stat(data[pseudo], all_stats_by_type));
+			// Convert times to minute
+			all_stats_by_type.game.time = all_stats_by_type.game.time.map(t => Math.round(t/60.0));
+			// Get and filter out non positive flag time
+			let chronos = to_object(all_players, all_stats_by_type.flag.min_time, time => time > 0);
+			// We don't need it anymore
+			delete all_stats_by_type.flag.min_time;
+			// Sort chronos in ascending order
+			let keys_sorted_chronos = Object.keys(chronos).sort(function(a,b){return chronos[a]-chronos[b]});
+			let vals_sorted_chronos = [];
+			for (let i = 0; i < keys_sorted_chronos.length; i++)
+				vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
+
+			if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update);
+			if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
+
+			if (!update)
+			{
+				$("#loader").hide();
+				$("#raw_json").append(`<a href="${path}" class="btn btn-primary" role="button" style="margin-top:40px;" target="_blank">Raw JSON data file</a>`);
+			}
+
+			$("#error").hide();
+		}
 	});
 }
 
