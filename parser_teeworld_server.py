@@ -4,6 +4,14 @@
 # Run:  $ python3 parser_teeworld_server.py --act help
 # to display the whole story help message.
 
+# known bugs :
+# * At midnight, in stdin mode, when the parser changes the dumped file, the stats are reseted but there may are players
+#   in game. The team and the time stats are the main problem.
+# * when a player change its name during the game, as spectator or directly as gamer
+
+# TODO:
+# * count the time spent (> 50%) of a player in a team to take into account the victory/defeat or not.
+
 # =============================================================================
 # ==================================================================== PACKAGES
 import sys
@@ -82,7 +90,7 @@ def printHelp():
 	print("                                                                                                                               ");
 	print("    * rename : This action load a JSON stats file given through the '--old' argument, to rename a player. The current player   ");
 	print("               name is given in the '--arg' argument and its new name is given in the '--new' argument:                        ");
-	print("                 $ python3 " + program_name + " --act rename --old stats.json --out newstats.json --arg oldname --new newname");
+	print("                 $ python3 " + program_name + " --act rename --old stats.json --out newstats.json --arg oldname --new newname  ");
 	print("               The '--out' argument gives the output filename.                                                                 ");
 	print("                                                                                                                               ");
 	print("    * merge  : This action load a JSON stats file given through the '--old' argument, to merge two players. The first player   ");
@@ -90,6 +98,7 @@ def printHelp():
 	print("               is given in the '--new' argument:                                                                               ");
 	print("                 $ python3 " + program_name + " --act merge --old stats.json --out newstats.json --arg name1 --new name2       ");
 	print("               The '--out' argument gives the output filename.                                                                 ");
+	print("               The min_flag stat is the min result of both. The death/kill coords are deleted.                                 ");
 	print("                                                                                                                               ");
 	print("    * delete : This action load a JSON stats file given through the '--old' argument, to delete a player. The player name to   ");
 	print("               delete is given in the '--arg' argument:                                                                        ");
@@ -231,6 +240,7 @@ def initPlayer(playerKey, stats):
 	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'gun',     0)
 	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'hammer',  0)
 	addDictIfNotExist(stats[playerKey]['kill']['weapon'], 'shotgun', 0)
+	addDictIfNotExist(stats[playerKey]['kill'],'coords',   [])
 
 
 	addDictIfNotExist(stats[playerKey],'death', {})
@@ -408,6 +418,7 @@ def parseLogLineGame(message, stats):
 
 
 		stats[victimName]['death']['coords'] += [[float(xName), float(yName)]];
+		stats[killerName]['kill' ]['coords'] += [[float(xName), float(yName)]];
 
 
 		if killerName == victimName: # then a suicide
@@ -716,7 +727,9 @@ def mergeStats(stats, addedStats):
 			recursiveMerge(stats[playerName], addedStats[playerName])
 
 
-			stats[playerName]['flag']['min_time'] = saveFlagT
+			stats[playerName]['flag' ]['min_time'] = saveFlagT
+			stats[playerName]['death']['coords'  ] = {}
+			stats[playerName]['kill' ]['coords'  ] = {}
 
 
 def deletePlayer(stats, oldName):
