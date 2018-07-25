@@ -318,7 +318,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot8', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Tim (in minutes)', type: 'none', autorange: true },
+			elem: 'plot8', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
