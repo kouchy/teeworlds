@@ -164,9 +164,8 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 	else
 		Plotly.newPlot('plot8', kill_data, kill_layout);
 
+	let death_coords_data = []
 	if (death_coords.length)
-	{
-		let death_coords_data = []
 		all_players.forEach(function(pseudo,i){
 			death_coords_data.push({
 				x: death_coords[i].x,
@@ -178,54 +177,54 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			})
 		})
 
-		let death_coords_layout = {
-			xaxis: {
-				range:  [-1000, 9000],
-				domain: [-1000, 9000],
-				showgrid: false,
-				zeroline: false,
-				title: "x",
-			},
-			yaxis: {
-				range:  [5300, 1200],
-				domain: [7000, 0],
-				showgrid: false,
-				zeroline: false,
-				title: "y",
-			},
-			images: [{
-				source: 'images/hd-map.png',
-				xref: 'x',
-				yref: 'y',
+	let death_coords_layout = {
+		xaxis: {
+			range:  [-1000, 9000],
+			domain: [-1000, 9000],
+			showgrid: false,
+			zeroline: false,
+			title: "x",
+		},
+		yaxis: {
+			range:  [5300, 1200],
+			domain: [7000, 0],
+			showgrid: false,
+			zeroline: false,
+			title: "y",
+		},
+		images: [{
+			source: 'images/hd-map.png',
+			xref: 'x',
+			yref: 'y',
 
-				//// values for small map:
-				//x: -100,
-				//y: -1100,
-				//sizex: 9000,
-				//sizey: 8000,
+			//// values for small map:
+			//x: -100,
+			//y: -1100,
+			//sizex: 9000,
+			//sizey: 8000,
 
-				// HD map, corners coords in tiles :
-				// x1=17, y1=60, x2=252, y2=140 (139?)
-				x: 544, // 16*32
-				y: 1920, // 60*32
-				sizex: 7520, // (252-17)*32
-				sizey: 2560, // (140-60)*32
+			// HD map, corners coords in tiles :
+			// x1=17, y1=60, x2=252, y2=140 (139?)
+			x: 544, // 16*32
+			y: 1920, // 60*32
+			sizex: 7520, // (252-17)*32
+			sizey: 2560, // (140-60)*32
 
-				xanchor: 'left',
-				yanchor: 'top',
-				sizing: 'stretch',
-				layer: 'below',
-				opacity: '0.5'
-			}],
-			// height: 700,
-			// width:  1000,
-			title: 'Death coordinates'
-		}
-		if (update)
-			Plotly.react('plot9', death_coords_data, death_coords_layout);
-		else
-			Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
+			xanchor: 'left',
+			yanchor: 'top',
+			sizing: 'stretch',
+			layer: 'below',
+			opacity: '0.5'
+		}],
+		// height: 700,
+		// width:  1000,
+		title: 'Death coordinates'
 	}
+	if (update)
+		Plotly.react('plot9', death_coords_data, death_coords_layout);
+	else
+		Plotly.newPlot('plot9', death_coords_data, death_coords_layout);
+
 }
 
 function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio)
