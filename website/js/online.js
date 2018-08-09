@@ -4,7 +4,7 @@ function notify_new_player(player, status, left=false) {
 	let title = "Teeworlds Inria/IMS";
 	let options = {
 		body: `${player} ${ left ? "left the game!" : "joined the " + status + " team!" }`,
-		icon: "images/tee_small.png"
+		icon: "/images/tee_small.png"
 	}
 
 	// Let's check if the browser supports notifications

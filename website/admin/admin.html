@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="The official website of the IMS/Inria Teeworlds server: this website shows the statistics of the players.">
+    <meta name="author" content="Adrien CASSAGNE">
+    <title>Teeworlds statistics</title>
+    <link rel="stylesheet" href="../css/lib/bootstrap-4.1.1.min.css">
+    <link rel="stylesheet" href="../css/lib/fontawesome-5.1.0.min.css">
+    <link rel="stylesheet" href="../css/bootstrap_carousel.css">
+    <link rel="shortcut icon" href="../images/tee.png">
+    <script src="../js/lib/jquery-3.3.1.min.js"></script>
+    <script src="../js/lib/lodash-4.17.10.min.js"></script>
+    <script src="../js/lib/popper-1.14.3.min.js"></script>
+    <script src="../js/lib/bootstrap-4.1.1.min.js"></script>
+    <script src="../js/lib/plotly-1.37.1.min.js"></script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="index.html" id="logo">Teeworlds statistics</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="navbarCollapse" class="collapse navbar-collapse">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html"><i class="fas fa-chart-bar" aria-hidden="true">&nbsp;</i>Daily</a></li>
+          <li class="nav-item"><a class="nav-link" href="../total.html"><i class="fas fa-chart-area" aria-hidden="true">&nbsp;</i>Total</a></li>
+          <li class="nav-item"><a class="nav-link" href="../progression.html"><i class="fas fa-chart-line" aria-hidden="true">&nbsp;</i>Time Progression</a></li>
+          <li class="nav-item"><a class="nav-link" href="../history.html"><i class="fas fa-history" aria-hidden="true">&nbsp;</i>History</a></li>
+          <li class="nav-item active"><a class="nav-link" href="./admin.html"><i class="fas fa-unlock" aria-hidden="true">&nbsp;</i>Administration</a></li>
+      </div>
+    </nav>
+    <div class="jumbotron">
+      <div class="container marketing">
+        <img src="../images/teeworlds.jpg" class="featurette-image img-fluid d-block rounded float-right" />
+        <h1>IMS/Inria Teeworlds server</h1>
+        <p class="lead">Welcome on the official website of the IMS/Inria Teeworlds server, this page shows the statistics of the players. The server is hosted at the following address: <strong>teeworlds.potionmagic.eu:8303</strong>.</p>
+        <p>Enjoy!</p>
+        <div id="online"></div>
+      </div>
+    </div>
+    <div class="container marketing">
+      <h1>Administration</h1>
+      <div class="row">
+        <div class="col-md-12">
+          <h2>Server status</h2>
+          <div class="btn-group btn-group-toggle" data-toggle="buttons" style="margin-bottom: 15px;margin-top: 10px;" id="stats_type">
+            <label class="btn btn-secondary" id="option_server_on">
+              <input type="radio" name="options" id="option_server_on1" autocomplete="off"> On
+            </label>
+            <label class="btn btn-secondary" id="option_server_off">
+              <input type="radio" name="options" id="option_server_off1" autocomplete="off"> Off
+            </label>
+          </div>
+          <hr>
+        </div>
+        <div class="col-md-12">
+          <h2>Rename a player</h2>
+          <form style="margin-bottom:20px;">
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="renamePseudoOld">Select an old player pseudo</label>
+                <select class="custom-select" id="renamePseudoOld" required>
+                  <option value="">Old pseudo</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="renamePseudoNew">Type a new pseudo</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend3">@</span>
+                  </div>
+                  <input type="text" class="form-control" id="renamePseudoNew" placeholder="New pseudo" aria-describedby="inputGroupPrepend3" required>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit" id="btnRename">Rename</button>
+          </form>
+          <hr>
+        </div>
+        <div class="col-md-12">
+          <h2>Merge two players</h2>
+          <form style="margin-bottom:20px;">
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="mergePseudoFrom">Select a player pseudo to be merge from</label>
+                <select class="custom-select" id="mergePseudoFrom" required>
+                  <option value="">Pseudo from</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="mergePseudoTo">Select a player pseudo to be merge to</label>
+                <select class="custom-select" id="mergePseudoTo" required>
+                  <option value="">Pseudo to</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn btn-warning" type="submit" id="btnMerge">Merge</button>
+          </form>
+          <hr>
+        </div>
+        <hr>
+        <div class="col-md-12">
+          <h2>Remove a player</h2>
+          <form style="margin-bottom:20px;">
+            <div class="form-row">
+              <div class="col-md-6 mb-3">
+                <label for="removePseudo">Select a player pseudo</label>
+                <select class="custom-select" id="removePseudo" required>
+                  <option value="">Pseudo</option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="removePseudoConfirm">Confirm the pseudo to remove</label>
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text" id="inputGroupPrepend3">@</span>
+                  </div>
+                  <input type="text" class="form-control" id="removePseudoConfirm" placeholder="Confirm pseudo" aria-describedby="inputGroupPrepend3" required>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-danger" type="submit" id="btnRemove" disabled="disabled">Remove</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="container marketing">
+      <div id="error" class="alert alert-danger" style="display:none;margin-top:20px;">An error happened :-(</div>
+      <hr>
+      <footer class="container">
+        <p class="float-right"><a href="#"><i class="fa fa-level-up-alt" aria-hidden="true">&nbsp;</i>Back to top</a></p>
+        <p>This is a footer.</p>
+      </footer>
+    </div>
+    <script src="../js/dashboard.js"></script>
+    <script src="../js/online.js"></script>
+    <script src="../js/admin.js"></script>
+  </body>
+</html>
