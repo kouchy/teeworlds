@@ -28,8 +28,27 @@ function notify_new_player(player, status, left=false) {
 	// want to be respectful there is no need to bother them any more.
 }
 
+var server_status = -1;
+function draw_server_status()
+{
+	$.get("/admin/admin.php", {command: "status"}, function( data ) {
+
+		if (server_status != data)
+		{
+			server_status = data;
+			$("#server_status").empty();
+			if (server_status == 0)
+				$("#server_status").append('Server status: <span class="badge badge-success"><abbr title="You can connect to the server right now!">Online</abbr></span>&nbsp;');
+			else
+				$("#server_status").append('Server status: <span class="badge badge-danger"><abbr title="Too bad, the server is down :-(">Offline</abbr></span>&nbsp;');
+		}
+	});
+}
+
 function draw_online_players(filename, first = true)
 {
+	draw_server_status();
+
 	$.getJSON( filename, function( data ) {
 		let all_players = Object.keys(data);
 
