@@ -2,15 +2,12 @@ var lock = false;
 var firstTimeCall = true;
 function lock_buttons()
 {
-	// $('.btn-group').attr('disabled','disabled');
 	$('.btn').attr('disabled','disabled');
 	$("fieldset").attr('disabled','disabled');
 }
 
 function unlock_buttons()
 {
-	// $('.btn-group').removeAttr('disabled');
-	// $('.btn').removeAttr('disabled');
 	$("#btnRename").removeAttr('disabled','disabled');
 	$("#btnMerge").removeAttr('disabled','disabled');
 	$("fieldset").removeAttr('disabled','disabled');
@@ -25,9 +22,6 @@ function draw_form(path)
 	$.getJSON(path, function( data )
 	{
 		all_players.forEach(function(pseudo,i){
-			// console.log(pseudo)
-			// pseudo = pseudo.replace(/[!"#$%&'()*+,.\/:;<=>?@[\\\]^`{|}~]/g, "\\\\$&");
-			// console.log(pseudo)
 			$(".custom-select option[value='"+i+"']").remove();
 		});
 
