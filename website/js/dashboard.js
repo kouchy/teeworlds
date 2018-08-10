@@ -98,7 +98,7 @@ function to_object(keys, values, filter_func = () => true) {
 	return object;
 }
 
-function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update = false)
+function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, player_damages, kill_coords, death_coords, update = false)
 {
 	plots = [
 		{
@@ -126,11 +126,11 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot7', title: 'Victories and defeats', stats: game_win, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
+			elem: 'plot11', title: 'Victories and defeats', stats: game_win, xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Amount', type: 'none', autorange: true },
 			create_stat: victory => ({ x: all_players, y: all_stats_by_type.game[victory], name: capitalize(victory), type: 'bar' }),
 		},
 		{
-			elem: 'plot11', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
+			elem: 'plot12', title: 'Time spent', stats: [0], xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
@@ -139,6 +139,30 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 		plots.forEach(plot_data => Plotly.react(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
 	else
 		plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: 'group', title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis }));
+
+	let damage_data = [
+		{
+			x: all_players,
+			y: all_players,
+			z: player_damages,
+			type: 'heatmap',
+			colorscale: [
+				[0, '#ffffff'],
+				[.5, '#ff0000'],
+				[1,   '#000000'],
+			]
+		}
+	];
+	let damage_layout = {
+		title: 'Give/take damages heatmap',
+		xaxis: {title: 'Give damages pseudo'},
+		yaxis: {title: 'Take damages pseudo'},
+	};
+
+	if (update)
+		Plotly.react('plot8', damage_data, damage_layout);
+	else
+		Plotly.newPlot('plot8', damage_data, damage_layout);
 
 	let kill_data = [
 		{
@@ -160,9 +184,9 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 	};
 
 	if (update)
-		Plotly.react('plot8', kill_data, kill_layout);
+		Plotly.react('plot7', kill_data, kill_layout);
 	else
-		Plotly.newPlot('plot8', kill_data, kill_layout);
+		Plotly.newPlot('plot7', kill_data, kill_layout);
 
 	let death_coords_data = []
 	if (death_coords.length)
@@ -254,7 +278,7 @@ function draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chrono
 
 }
 
-function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio)
+function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio, player_damage_ratio)
 {
 	for (let p = 0; p < all_players.length; p++) {
 		weapons.forEach(w => {
@@ -324,7 +348,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			create_stat: action => ({ x: all_players, y: all_stats_by_type.flag[action], name: flag_stats_names[action] || capitalize(action), type: 'bar' }),
 		},
 		{
-			elem: 'plot8', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
+			elem: 'plot13', title: 'Time spent', stats: [0], barmode: 'group', xaxis: { title: 'Pseudo', type: 'none', autorange: true }, yaxis: { title: 'Time (in minutes)', type: 'none', autorange: true },
 			create_stat: () => ({ x: all_players, y: all_stats_by_type.game.time, name: 'Play time', type: 'bar' }),
 		},
 	];
@@ -354,6 +378,31 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 		yaxis: {title: 'Killed pseudo'},
 	};
 	Plotly.newPlot('plot7', kill_data, kill_layout);
+
+
+	let max_damage_ratio = Math.max.apply(null,[].concat.apply([],player_damage_ratio).filter(ratio => !!(ratio/ratio) ));
+	let damage_data = [
+		{
+			x: all_players,
+			y: all_players,
+			z: player_damage_ratio,
+			type: 'heatmap',
+			colorscale: [
+				[0, '#8080ff'],
+				[0.9999/max_damage_ratio, '#80ffff'],
+				[1/max_damage_ratio,       '#808080'],
+				[1.0001/max_damage_ratio, '#ffaaaa'],
+				[0.5,   '#ff0000'],
+				[1,   '#000000'],
+			]
+		}
+	];
+	let damage_layout = {
+		title: 'Give/take damages ratio heatmap',
+		xaxis: {title: 'Give damages pseudo'},
+		yaxis: {title: 'Take damages pseudo'},
+	};
+	Plotly.newPlot('plot8', damage_data, damage_layout);
 }
 
 
@@ -363,7 +412,7 @@ function draw_dashboard(path, update = false)
 {
 	if (!update) {
 		$("#loader").show();
-		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "plot11", "raw_json"].forEach(e => $(`#${e}`).empty());
+		["plot1", "plot2", "plot3", "plot4", "plot5", "plot6", "plot7", "plot8", "plot9", "plot10", "plot11", "plot12", "plot13", "raw_json"].forEach(e => $(`#${e}`).empty());
 		$("#error").hide();
 	}
 
@@ -389,11 +438,26 @@ function draw_dashboard(path, update = false)
 				})
 			});
 
+			// Get player damage matrix
+			let player_damages = [];
+			all_players.forEach(function(pseudo,i){
+				player_damages.push([]);
+				all_players.forEach( function(pseudo2,j){
+					player_damages[i].push(
+						i == j ? data[pseudo].damage.itself.armor + data[pseudo].damage.itself.health : data[pseudo].damage.take.player[pseudo2] ? data[pseudo].damage.take.player[pseudo2].armor + data[pseudo].damage.take.player[pseudo2].health : 0);
+				})
+			});
+
 			// Get player kill ratio matrix
 			// TODO: handle the few Infinity cases
 			let player_kill_ratio = player_kills.map(function(line){return line.slice();});
 			player_kill_ratio.forEach(function(line,i){
 				line.forEach(function(elt,j){player_kill_ratio[i][j] = elt/player_kills[j][i]});
+			});
+
+			let player_damage_ratio = player_damages.map(function(line){return line.slice();});
+			player_damage_ratio.forEach(function(line,i){
+				line.forEach(function(elt,j){player_damage_ratio[i][j] = elt/player_damages[j][i]});
 			});
 
 			// Get kill and death coords
@@ -438,8 +502,8 @@ function draw_dashboard(path, update = false)
 			for (let i = 0; i < keys_sorted_chronos.length; i++)
 				vals_sorted_chronos[i] = chronos[keys_sorted_chronos[i]];
 
-			if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, kill_coords, death_coords, update);
-			if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio);
+			if (type == "daily") draw_dashboard_daily(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kills, player_damages, kill_coords, death_coords, update);
+			if (type == "total") draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chronos, vals_sorted_chronos, player_kill_ratio, player_damage_ratio);
 
 			if (!update)
 			{
