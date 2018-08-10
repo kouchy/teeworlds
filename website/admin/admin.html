@@ -59,45 +59,49 @@
         <div class="col-md-12">
           <h2>Rename a player</h2>
           <form style="margin-bottom:20px;">
-            <div class="form-row">
-              <div class="col-md-6 mb-3">
-                <label for="renamePseudoOld">Select an old player pseudo</label>
-                <select class="custom-select" id="renamePseudoOld" required>
-                  <option value="">Old pseudo</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="renamePseudoNew">Type a new pseudo</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" id="inputGroupPrepend3">@</span>
+            <fieldset disabled>
+              <div class="form-row">
+                <div class="col-md-6 mb-3">
+                  <label for="renamePseudoOld">Select an old player pseudo</label>
+                  <select class="custom-select" id="renamePseudoOld" required>
+                    <option value="">Old pseudo</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="renamePseudoNew">Type a new pseudo</label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroupPrepend3">@</span>
+                    </div>
+                    <input type="text" class="form-control" id="renamePseudoNew" placeholder="New pseudo" aria-describedby="inputGroupPrepend3" required>
                   </div>
-                  <input type="text" class="form-control" id="renamePseudoNew" placeholder="New pseudo" aria-describedby="inputGroupPrepend3" required>
                 </div>
               </div>
-            </div>
-            <button class="btn btn-primary" type="submit" id="btnRename">Rename</button>
+              <button class="btn btn-primary" type="submit" id="btnRename" disabled="disabled">Rename</button><img src="../images/loader_blue.gif" id="small-loader-rename" class="small-loader"/>
+            </fieldset>
           </form>
           <hr>
         </div>
         <div class="col-md-12">
           <h2>Merge two players</h2>
           <form style="margin-bottom:20px;">
-            <div class="form-row">
-              <div class="col-md-6 mb-3">
-                <label for="mergePseudoFrom">Select a player pseudo to be merge from</label>
-                <select class="custom-select" id="mergePseudoFrom" required>
-                  <option value="">Pseudo from</option>
-                </select>
+            <fieldset disabled>
+              <div class="form-row">
+                <div class="col-md-6 mb-3">
+                  <label for="mergePseudoFrom">Select a player pseudo to be merge from</label>
+                  <select class="custom-select" id="mergePseudoFrom" required>
+                    <option value="">Pseudo from</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="mergePseudoTo">Select a player pseudo to be merge to</label>
+                  <select class="custom-select" id="mergePseudoTo" required>
+                    <option value="">Pseudo to</option>
+                  </select>
+                </div>
               </div>
-              <div class="col-md-6 mb-3">
-                <label for="mergePseudoTo">Select a player pseudo to be merge to</label>
-                <select class="custom-select" id="mergePseudoTo" required>
-                  <option value="">Pseudo to</option>
-                </select>
-              </div>
-            </div>
-            <button class="btn btn-warning" type="submit" id="btnMerge">Merge</button>
+              <button class="btn btn-warning" type="submit" id="btnMerge" disabled="disabled">Merge</button><img src="../images/loader_yellow.gif" id="small-loader-merge" class="small-loader"/>
+            </fieldset>
           </form>
           <hr>
         </div>
@@ -105,24 +109,26 @@
         <div class="col-md-12">
           <h2>Remove a player</h2>
           <form style="margin-bottom:20px;">
-            <div class="form-row">
-              <div class="col-md-6 mb-3">
-                <label for="removePseudo">Select a player pseudo</label>
-                <select class="custom-select" id="removePseudo" required>
-                  <option value="">Pseudo</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="removePseudoConfirm">Confirm the pseudo to remove</label>
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text" id="inputGroupPrepend3">@</span>
+            <fieldset disabled>
+              <div class="form-row">
+                <div class="col-md-6 mb-3">
+                  <label for="removePseudo">Select a player pseudo</label>
+                  <select class="custom-select" id="removePseudo" required>
+                    <option value="">Pseudo</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="removePseudoConfirm">Confirm the pseudo to remove</label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text" id="inputGroupPrepend3">@</span>
+                    </div>
+                    <input type="text" class="form-control" id="removePseudoConfirm" placeholder="Confirm pseudo" aria-describedby="inputGroupPrepend3" required>
                   </div>
-                  <input type="text" class="form-control" id="removePseudoConfirm" placeholder="Confirm pseudo" aria-describedby="inputGroupPrepend3" required>
                 </div>
               </div>
-            </div>
-            <button class="btn btn-danger" type="submit" id="btnRemove" disabled="disabled">Remove</button>
+              <button class="btn btn-danger" type="submit" id="btnRemove" disabled="disabled">Remove</button><img src="../images/loader_red.gif" id="small-loader-remove" class="small-loader"/>
+            </fieldset>
           </form>
         </div>
       </div>

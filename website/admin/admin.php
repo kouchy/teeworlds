@@ -59,8 +59,8 @@ if (isset($_GET["command"]))
 	{
 		if (isset($_GET["pseudoOld"]) && isset($_GET["pseudoNew"]))
 		{
-			$pseudoOld = $_GET["pseudoOld"];
-			$pseudoNew = $_GET["pseudoNew"];
+			$pseudoOld = escapeshellarg(rawurldecode($_GET["pseudoOld"]));
+			$pseudoNew = escapeshellarg(rawurldecode($_GET["pseudoNew"]));
 
 			$output;
 			$lastline = exec("$scriptsRoot/rename_player.sh $pseudoOld $pseudoNew", $output, $retval);
@@ -78,8 +78,8 @@ if (isset($_GET["command"]))
 	{
 		if (isset($_GET["pseudoFrom"]) && isset($_GET["pseudoTo"]))
 		{
-			$pseudoFrom = $_GET["pseudoFrom"];
-			$pseudoTo = $_GET["pseudoTo"];
+			$pseudoFrom = escapeshellarg(rawurldecode($_GET["pseudoFrom"]));
+			$pseudoTo   = escapeshellarg(rawurldecode($_GET["pseudoTo"  ]));
 
 			$output;
 			$lastline = exec("$scriptsRoot/merge_player.sh $pseudoFrom $pseudoTo", $output, $retval);
@@ -97,7 +97,7 @@ if (isset($_GET["command"]))
 	{
 		if (isset($_GET["pseudo"]))
 		{
-			$pseudo = $_GET["pseudo"];
+			$pseudo = escapeshellarg(rawurldecode($_GET["pseudo"]));
 
 			$output;
 			$lastline = exec("$scriptsRoot/remove_player.sh $pseudo", $output, $retval);
