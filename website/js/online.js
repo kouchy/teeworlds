@@ -31,7 +31,7 @@ function notify_new_player(player, status, left=false) {
 var server_status = -1;
 function draw_server_status()
 {
-	$.get("/admin/admin.php", {command: "status"}, function( data ) {
+	$.get("/status.php", {command: "status"}, function( data ) {
 
 		if (server_status != data)
 		{
