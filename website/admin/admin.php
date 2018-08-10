@@ -15,21 +15,8 @@ if (isset($_GET["command"]))
 {
 	$command = $_GET["command"];
 
-	// http://teeworlds.potionmagic.eu/admin/admin.php?command=status
-	if ($command == "status") // ------------------------------------------------------------------------------- STATUS
-	{
-		$output;
-		$lastline = exec("$scriptsRoot/teeworlds_server.sh status", $output, $retval);
-
-		// DEBUG
-		// echo "command='status' - output='".$output[0]."' - retval='".$retval."'";
-
-		echo ($output[0] == "Running") ? 0 : 1;
-
-		exit();
-	}
 	// http://teeworlds.potionmagic.eu/admin/admin.php?command=start
-	else if ($command == "start") // ---------------------------------------------------------------------------- START
+	if ($command == "start") // --------------------------------------------------------------------------------- START
 	{
 		$output;
 		$lastline = exec("$scriptsRoot/teeworlds_server.sh start", $output, $retval);

@@ -37,7 +37,7 @@ function draw_form(path)
 		if (firstTimeCall) {
 			firstTimeCall=false;
 
-			$.get("admin.php", {command: "status"}, function( data ) {
+			$.get("/status.php", {command: "status"}, function( data ) {
 				$("#option_server_"+((data == 0)?"on":"off")).addClass("active");
 				$("#option_server_"+((data == 0)?"off":"on")).removeClass("active");
 
