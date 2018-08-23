@@ -15,9 +15,15 @@ fi
 player_name1=$1 # name of the player to merge into the other
 player_name2=$2
 
-while IFS= read -d $'\0' -r file ; do
-	if [ -f $file ]; then
-        python3 $HOME/teeworlds_repo/parser_teeworld_server.py --act merge --old $file --out $file --arg "$player_name1" --new "$player_name2"
-        python3 $HOME/teeworlds_repo/parser_teeworld_server.py --act rename --old $file --out $file --arg "$player_name1" --new "$player_name2"
-    fi
-done < <(find $HOME/stats/ -print0)
+(
+	flock -n 9 || exit 1
+
+	# ... commands executed under lock ...
+	while IFS= read -d $'\0' -r file ; do
+		if [ -f $file ]; then
+	        python3 $HOME/teeworlds_repo/parser_teeworld_server.py --act merge --old $file --out $file --arg "$player_name1" --new "$player_name2"
+	        python3 $HOME/teeworlds_repo/parser_teeworld_server.py --act rename --old $file --out $file --arg "$player_name1" --new "$player_name2"
+	    fi
+	done < <(find $HOME/stats/ -print0)
+
+) 9>/tmp/.lock_teeworlds_merge_player
