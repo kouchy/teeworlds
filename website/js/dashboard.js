@@ -356,6 +356,7 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 	plots.forEach(plot_data => Plotly.newPlot(plot_data.elem, plot_data.stats.map(s => plot_data.create_stat(s)), { barmode: plot_data.barmode, title: plot_data.title, autorange: true, xaxis: plot_data.xaxis, yaxis: plot_data.yaxis}));
 
 	let max_kill_ratio = Math.max.apply(null,[].concat.apply([],player_kill_ratio).filter(ratio => !!(ratio/ratio) ));
+	let min_kill_ratio = Math.min.apply(null,[].concat.apply([],player_kill_ratio).filter(ratio => !!(ratio/ratio) ));
 	let kill_data = [
 		{
 			x: all_players,
@@ -364,10 +365,10 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 			type: 'heatmap',
 			colorscale: [
 				[0, '#8080ff'],
-				[0.9999/max_kill_ratio, '#80ffff'],
-				[1/max_kill_ratio,       '#808080'],
-				[1.0001/max_kill_ratio, '#ffaaaa'],
-				[0.5,   '#ff0000'],
+				[(0.9999-min_kill_ratio)/(max_kill_ratio-min_kill_ratio), '#80ffff'],
+				[(1-min_kill_ratio)/(max_kill_ratio-min_kill_ratio),       '#808080'],
+				[(1.0001-min_kill_ratio)/(max_kill_ratio-min_kill_ratio), '#ffaaaa'],
+				[(1-min_kill_ratio+((max_kill_ratio-1)/2))/(max_kill_ratio-min_kill_ratio),   '#ff0000'],
 				[1,   '#000000'],
 			]
 		}
@@ -381,21 +382,23 @@ function draw_dashboard_total(all_players, all_stats_by_type, keys_sorted_chrono
 
 
 	let max_damage_ratio = Math.max.apply(null,[].concat.apply([],player_damage_ratio).filter(ratio => !!(ratio/ratio) ));
+	let min_damage_ratio = Math.min.apply(null,[].concat.apply([],player_damage_ratio).filter(ratio => !!(ratio/ratio) ));
+
 	let damage_data = [
 		{
 			x: all_players,
 			y: all_players,
 			z: player_damage_ratio,
 			type: 'heatmap',
+			cmin: 0,
 			colorscale: [
 				[0, '#8080ff'],
-				[0.9999/max_damage_ratio, '#80ffff'],
-				[1/max_damage_ratio,       '#808080'],
-				[1.0001/max_damage_ratio, '#ffaaaa'],
-				[0.5,   '#ff0000'],
+				[(0.9999-min_damage_ratio)/(max_damage_ratio-min_damage_ratio), '#80ffff'],
+				[(1-min_damage_ratio)/(max_damage_ratio-min_damage_ratio),       '#808080'],
+				[(1.0001-min_damage_ratio)/(max_damage_ratio-min_damage_ratio), '#ffaaaa'],
+				[(1-min_damage_ratio+((max_damage_ratio-1)/2))/(max_damage_ratio-min_damage_ratio),   '#ff0000'],
 				[1,   '#000000'],
-			]
-		}
+			]		}
 	];
 	let damage_layout = {
 		title: 'Give/take damages ratio heatmap',
